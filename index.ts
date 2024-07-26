@@ -1,39 +1,23 @@
 import { Headless } from "haxball.js"
-import { AsyncDatabase as Database } from "promised-sqlite3";
 import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
-import { addTransparency, updateTime, getStats, setStats } from "./src/utils"
-import { welcomePlayer } from "./src/welcome"
-import { createTables } from "./src/db";
 import { handleBallOutOfBounds } from "./src/out";
 import * as fs from 'fs';
 
 export interface lastKick {
-  byPlayer: Player,
+  byPlayer: PlayerAugmented,
   x: number,
   y: number,
 }
 
-class Player extends PlayerObject {
+export class PlayerAugmented extends PlayerObject {
+  auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
   constructor(p: PlayerObject) {
     super();
     this.auth = p.auth;
     this.foulsMeter = 0;
   }
-}
-
-const roomF = {
-  players: [],
-  getPlayerList: () => players,
-  onPlayerJoin: (p: PlayerObject) => {
-    const newPlayer = new Player(p)
-    players.push(newPlayer)
-  },
-  onPlayerLeave: (p: PlayerObject) => 
-  { 
-    players = players.filter(pp => p.id != pp.id)
-  },
 }
 
 export class Game {
@@ -61,29 +45,26 @@ export class Game {
 }
 
 
-export let players: Player[] = []
+export let players: PlayerAugmented[] = []
+export let getP = (p: PlayerObject) => { 
+  const found = players.find(pp => pp.id == p.id)
+  if (!found) {
+    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array. Players array: ${players}`)
+  }
+  return found
+}
 export let db: any;
 export let room: RoomObject;
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
-  db = await Database.open('db.sqlite')
-  // Uncomment for DB SQL Debug:
-  // db.inner.on("trace", (sql: any) => console.log("[TRACE]", sql));
-  try { 
-    console.log('Creating DB...')
-    await createTables(db)
-  } catch (e) {
-    console.log('\nDB tables already created.')
-  }
-
   room = HBInit(args)
 
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
-
   room.setCustomStadium(rsStadium)
+  room.setTimeLimit(0)
+  room.setScoreLimit(0)
 
   let game = new Game()
-
   room.startGame()
 
   room.onGameTick = () => {
@@ -92,28 +73,27 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     game.handleBallOutOfBounds()
   }
 
-  room.setTimeLimit(0)
-  room.setScoreLimit(0)
-
   room.onPlayerJoin = async p => {
-    roomF.onPlayerJoin(p)
+    const newPlayer = new PlayerAugmented(p)
+    players.push(newPlayer)
   }
 
   room.onPlayerLeave = async p => {
-    roomF.onPlayerLeave(p)
+    players = players.filter(pp => p.id != pp.id)
   }
 
   room.onPlayerChat = (p, msg) => {
+    const pp = getP(p)
     if (isCommand(msg)){
-      handleCommand(toAug(p), msg)
+      handleCommand(pp, msg)
       return false
     }
-    playerMessage(toAug(p), msg)
+    playerMessage(pp, msg)
     return false
   }
 
   room.onPlayerTeamChange = p => {
-    toAug(p).team = p.team
+    getP(p).team = p.team
   }
 
   room.onRoomLink = url => {

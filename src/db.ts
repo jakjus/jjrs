@@ -1,4 +1,18 @@
-import { db } from '../index'
+import { AsyncDatabase as Database } from "promised-sqlite3";
+
+export let db: any;
+
+(async () => {
+  db = Database.open('db.sqlite')
+  // Uncomment for DB SQL Debug:
+  // db.inner.on("trace", (sql: any) => console.log("[TRACE]", sql));
+  try { 
+    console.log('Creating DB...')
+    await createTables(db)
+  } catch (e) {
+    console.log('\nDB tables already created.')
+  }
+})()
 
 export const createTables = async (db: any) => {
     const createStatements = [`CREATE TABLE "players" (

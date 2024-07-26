@@ -1,5 +1,5 @@
-import { room } from "../index"
-import { msToHhmmss, getStats } from "./utils"
+import { room, PlayerAugmented } from "../index"
+import { msToHhmmss, getStats, getOrCreatePlayer } from "./utils"
 import { voteOptions, onlyVoteMessage, handleVote } from "./mapchooser"
 
 export const sendMessage = (p: PlayerObject | null, msg: string) => {
@@ -10,11 +10,13 @@ export const sendMessage = (p: PlayerObject | null, msg: string) => {
     }
 }
 
-export const playerMessage = (p: PlayerAugmented, msg: string) => {
+export const playerMessage = async (p: PlayerAugmented, msg: string) => {
     let bestTime = `[Not finished]`
     let color = 0xd6d6d6
-    if (getStats(p) && getStats(p).bestTime){
-        bestTime = `[${msToHhmmss(getStats(p).bestTime)}]`
+    const stats = await getStats(p)
+    const player = await getOrCreatePlayer(p)
+    if (stats && stats.bestTime){
+        bestTime = `[${msToHhmmss(stats.bestTime)}]`
         color = 0xf2e5d0
     } 
 
@@ -29,5 +31,5 @@ export const playerMessage = (p: PlayerAugmented, msg: string) => {
         return false
     }
 
-    room.sendAnnouncement(`${p.name} ${bestTime} [${Math.floor(p.points)}⛰️]: ${msg}`, undefined, color, "normal", 1)
+    room.sendAnnouncement(`${p.name} ${bestTime} [${Math.floor(player.points)}⛰️]: ${msg}`, undefined, color, "normal", 1)
 }
