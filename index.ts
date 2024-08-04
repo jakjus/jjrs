@@ -10,11 +10,10 @@ export interface lastKick {
   y: number,
 }
 
-export class PlayerAugmented extends PlayerObject {
+export class PlayerAugmented {
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
   constructor(p: PlayerObject) {
-    super();
     this.auth = p.auth;
     this.foulsMeter = 0;
   }

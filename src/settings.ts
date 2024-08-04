@@ -1,2 +1,1 @@
-export const defaultTeam = 1
-export const mapDurationMins = 15
+export const mapBounds = { x: [-1200, 1200], y: [-700,700] }
