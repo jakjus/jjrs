@@ -1,7 +1,7 @@
 import { room, PlayerAugmented } from "../index"
 import { msToHhmmss, getStats, getOrCreatePlayer } from "./utils"
 
-export const sendMessage = (p: PlayerObject | null, msg: string) => {
+export const sendMessage = (p: PlayerAugmented | null, msg: string) => {
     if (p) {
         room.sendAnnouncement(`[DM] ${msg}`, p.id, 0xe6e9f2, "small", 0)
     } else {

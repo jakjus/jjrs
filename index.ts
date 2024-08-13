@@ -11,30 +11,39 @@ export interface lastKick {
 }
 
 export class PlayerAugmented {
+  id: number;
+  name: string;
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
+  conn: string;
   constructor(p: PlayerObject) {
+    this.id = p.id;
+    this.name = p.name;
     this.auth = p.auth;
     this.foulsMeter = 0;
+    this.conn = p.conn;
   }
+  get position() { return room.getPlayer(this.id).position }
+  get team() { return room.getPlayer(this.id).team }
 }
 
 export class Game {
-  time: number;
+  ticks: number;
   active: boolean;
   state: "play" | "out" | "os" | "ck" | "fk" | "pen";
   constructor() {
-    this.time = 0;
+    this.ticks = 0;
     this.active = true;
     this.state = "play";
   }
   addTime() {
     if (this.active) {
-      this.time++
+      this.ticks++
     }
   }
   handleEnd() {
-    if (this.time > 300) {
+    if (this.ticks > 300*60) {
+      console.log('stopping bcs time')
       room.stopGame()
     }
   }
@@ -45,7 +54,7 @@ export class Game {
 
 
 export let players: PlayerAugmented[] = []
-export let getP = (p: PlayerObject) => { 
+export let getP = (p: PlayerObject) => {
   const found = players.find(pp => pp.id == p.id)
   if (!found) {
     throw(`Lookup for player with id ${p.id} failed. Player is not in the players array. Players array: ${players}`)
@@ -73,6 +82,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerJoin = async p => {
+    process.env.DEBUG && room.setPlayerAdmin(p.id, true)
     const newPlayer = new PlayerAugmented(p)
     players.push(newPlayer)
   }
@@ -83,6 +93,12 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onPlayerChat = (p, msg) => {
     const pp = getP(p)
+    if (process.env.DEBUG) {
+      console.log('player', p)
+      console.log('paug', pp)
+      console.log('paugpos', pp.position)
+      console.log('paugteam', pp.team)
+    }
     if (isCommand(msg)){
       handleCommand(pp, msg)
       return false
@@ -92,7 +108,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerTeamChange = p => {
-    getP(p).team = p.team
+    // getP(p).team = p.team
   }
 
   room.onRoomLink = url => {
