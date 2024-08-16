@@ -4,7 +4,7 @@ import { playerMessage } from "./src/message"
 import { handleBallOutOfBounds } from "./src/out";
 import * as fs from 'fs';
 
-export interface lastKick {
+export interface lastTouch {
   byPlayer: PlayerAugmented,
   x: number,
   y: number,
@@ -16,35 +16,52 @@ export class PlayerAugmented {
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
   conn: string;
+  team: 0 | 1 | 2;
   constructor(p: PlayerObject) {
     this.id = p.id;
     this.name = p.name;
     this.auth = p.auth;
     this.foulsMeter = 0;
     this.conn = p.conn;
+    this.team = p.team;
   }
   get position() { return room.getPlayer(this.id).position }
-  get team() { return room.getPlayer(this.id).team }
 }
 
 export class Game {
   ticks: number;
   active: boolean;
-  state: "play" | "out" | "os" | "ck" | "fk" | "pen";
+  //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
+  lastTouch: lastTouch | null;
   constructor() {
     this.ticks = 0;
     this.active = true;
-    this.state = "play";
+    this.lastTouch = null;
+    //this.state = "play";
   }
-  addTime() {
+  addTicks() {
     if (this.active) {
       this.ticks++
     }
   }
   handleEnd() {
-    if (this.ticks > 300*60) {
+    // 60 ticks per second
+    if (this.ticks >= 5 * 60 * 60) {
       console.log('stopping bcs time')
       room.stopGame()
+    }
+  }
+  handleTouch() {
+    const ball = room.getDiscProperties(0)
+    if (!ball) { return }
+    for (const p of room.getPlayerList()) {
+      const prop = room.getPlayerDiscProperties(p.id)
+      if (!prop) { continue }
+      if (Math.sqrt((prop.x - ball.x)**2+(prop.y - ball.y)**2) < (prop.radius + ball.radius + 0.05)) {
+        console.log('touched by ', p)
+        this.lastTouch = { byPlayer: toAug(p), x: prop.x, y: prop.y }
+        return
+      }
     }
   }
   handleBallOutOfBounds() {
@@ -54,7 +71,7 @@ export class Game {
 
 
 export let players: PlayerAugmented[] = []
-export let getP = (p: PlayerObject) => {
+export let toAug = (p: PlayerObject) => {
   const found = players.find(pp => pp.id == p.id)
   if (!found) {
     throw(`Lookup for player with id ${p.id} failed. Player is not in the players array. Players array: ${players}`)
@@ -76,8 +93,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.startGame()
 
   room.onGameTick = () => {
-    game.addTime()
+    game.addTicks()
     game.handleEnd()
+    game.handleTouch()
     game.handleBallOutOfBounds()
   }
 
@@ -92,12 +110,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerChat = (p, msg) => {
-    const pp = getP(p)
+    const pp = toAug(p)
     if (process.env.DEBUG) {
-      console.log('player', p)
       console.log('paug', pp)
-      console.log('paugpos', pp.position)
-      console.log('paugteam', pp.team)
     }
     if (isCommand(msg)){
       handleCommand(pp, msg)
@@ -108,7 +123,11 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerTeamChange = p => {
-    // getP(p).team = p.team
+    toAug(p).team = p.team
+  }
+
+  room.onPlayerBallKick = p => {
+    game.lastTouch = { byPlayer: toAug(p), x: p.position.x, y: p.position.y }
   }
 
   room.onRoomLink = url => {
