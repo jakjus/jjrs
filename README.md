@@ -1,4 +1,4 @@
-<h1 align="center">⛰️ hax-climb</h1>
+<h1 align="center">hax-rs</h1>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-blue.svg?cacheSeconds=2592000" />
   <img src="https://img.shields.io/badge/npm-%3E%3D8.6.0-blue.svg" />
