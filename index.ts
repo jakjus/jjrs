@@ -1,7 +1,7 @@
 import { Headless } from "haxball.js"
 import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
-import { handleBallOutOfBounds } from "./src/out";
+import { handleBallOutOfBounds, handleBallInPlay, clearThrowInBlocks } from "./src/out";
 import * as fs from 'fs';
 
 export interface lastTouch {
@@ -30,17 +30,17 @@ export class PlayerAugmented {
 
 export class Game {
   ticks: number;
-  active: boolean;
+  inPlay: boolean;
   //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
   lastTouch: lastTouch | null;
   constructor() {
     this.ticks = 0;
-    this.active = true;
+    this.inPlay = true;
     this.lastTouch = null;
     //this.state = "play";
   }
   addTicks() {
-    if (this.active) {
+    if (this.inPlay) {
       this.ticks++
     }
   }
@@ -51,7 +51,7 @@ export class Game {
       room.stopGame()
     }
   }
-  handleTouch() {
+  handleBallTouch() {
     const ball = room.getDiscProperties(0)
     if (!ball) { return }
     for (const p of room.getPlayerList()) {
@@ -65,7 +65,10 @@ export class Game {
     }
   }
   handleBallOutOfBounds() {
-    handleBallOutOfBounds(this, room)
+    handleBallOutOfBounds(this)
+  }
+  handleBallInPlay() {
+    handleBallInPlay(this)
   }
 }
 
@@ -74,29 +77,38 @@ export let players: PlayerAugmented[] = []
 export let toAug = (p: PlayerObject) => {
   const found = players.find(pp => pp.id == p.id)
   if (!found) {
-    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array. Players array: ${players}`)
+    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${players}`)
   }
   return found
 }
 export let db: any;
 export let room: RoomObject;
+export let game: Game | null;
+
+process.stdin.on("data", d => {
+  const r = room
+  console.log(eval(d.toString()))
+})
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args)
-
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(0)
   room.setScoreLimit(0)
 
-  let game = new Game()
   room.startGame()
 
   room.onGameTick = () => {
+    if (!game) { return }
     game.addTicks()
-    game.handleEnd()
-    game.handleTouch()
-    game.handleBallOutOfBounds()
+    game.handleBallTouch()
+    if (game.inPlay) {
+      game.handleEnd()
+      game.handleBallOutOfBounds()
+    } else {
+      game.handleBallInPlay()
+    }
   }
 
   room.onPlayerJoin = async p => {
@@ -113,6 +125,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     const pp = toAug(p)
     if (process.env.DEBUG) {
       console.log('paug', pp)
+      console.log('props', room.getPlayerDiscProperties(p.id))
     }
     if (isCommand(msg)){
       handleCommand(pp, msg)
@@ -122,12 +135,27 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     return false
   }
 
+  room.onGameStart = _ => {
+    game = new Game()
+    clearThrowInBlocks()
+  }
+
+  room.onPositionsReset = () => {
+    clearThrowInBlocks()
+  }
+
+  room.onGameStop = _ => {
+    if (game) { game = null }
+  }
+
   room.onPlayerTeamChange = p => {
     toAug(p).team = p.team
   }
 
   room.onPlayerBallKick = p => {
-    game.lastTouch = { byPlayer: toAug(p), x: p.position.x, y: p.position.y }
+    if (game) {
+      game.lastTouch = { byPlayer: toAug(p), x: p.position.x, y: p.position.y }
+    }
   }
 
   room.onRoomLink = url => {
