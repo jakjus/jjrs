@@ -97,7 +97,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.setTimeLimit(0)
   room.setScoreLimit(0)
 
-  room.startGame()
+  //room.startGame()
 
   room.onGameTick = () => {
     if (!game) { return }

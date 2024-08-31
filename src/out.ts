@@ -117,8 +117,8 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 			throwIn(game, newForTeam, pos)
 			return
 		}
-		if (i > 40) {
-			if (Math.floor(i/10)%2 == 0) {
+		if (i > 70) {
+			if (Math.floor(i/4)%2 == 0) {
 				room.setDiscProperties(0, {color: blinkColor})
 			} else {
 				room.setDiscProperties(0, {color: colors.white })
@@ -134,7 +134,7 @@ export const handleBallInPlay = (game: Game) => {
 		room.sendAnnouncement('game inPlay')
 		room.getPlayerList().forEach(p => room.setPlayerDiscProperties(p.id, { invMass: defaults.invMass }))
 		game.inPlay = true
-		// set color to blank
+		room.setDiscProperties(0, { color: colors.white })
 		clearThrowInBlocks()
 	}
 }
