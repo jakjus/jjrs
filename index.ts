@@ -31,9 +31,11 @@ export class PlayerAugmented {
 export class Game {
   ticks: number;
   inPlay: boolean;
+  eventCounter: number;
   //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
   lastTouch: lastTouch | null;
   constructor() {
+    this.eventCounter = 0; // to debounce some events
     this.ticks = 0;
     this.inPlay = true;
     this.lastTouch = null;
@@ -58,7 +60,6 @@ export class Game {
       const prop = room.getPlayerDiscProperties(p.id)
       if (!prop) { continue }
       if (Math.sqrt((prop.x - ball.x)**2+(prop.y - ball.y)**2) < (prop.radius + ball.radius + 0.05)) {
-        console.log('touched by ', p)
         this.lastTouch = { byPlayer: toAug(p), x: prop.x, y: prop.y }
         return
       }
