@@ -36,14 +36,9 @@ export const handleBallOutOfBounds = async (game: Game) => {
 
 const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	console.log(`corner for ${forTeam}`)
-  // { x: mapBounds.x[0], y: (mapBounds.y[1]-2)*Math.sign(ballPos.y) }
-	// colorBall(forTeam, )
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
-	room.setDiscProperties(0, { color: forTeam == 1 ? colors.red : colors.blue })
-	setTimeout(() => { 
-		if (savedEventCounter == game.eventCounter) { room.setDiscProperties(0, { color: colors.white })}
-	}, 1500)
+	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*mapBounds.x, y: (mapBounds.y-2)*Math.sign(pos.y) }, savedEventCounter)
 	const blockerId = forTeam == 1 ? 2 : 1
 	const notBlockerId = forTeam == 1 ? 1 : 2
 	room.setDiscProperties(blockerId, {x: (mapBounds.x+60)*Math.sign(pos.x), y: (mapBounds.y+60)*Math.sign(pos.y), radius: 420 });
@@ -51,8 +46,6 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
 	})
-	room.setDiscProperties(0, { x: Math.sign(pos.x)*mapBounds.x, y: (mapBounds.y-2)*Math.sign(pos.y), xspeed: 0, yspeed: 0})
-	game.inPlay = false
 
 	// Blink if not played
 	for (let i=0; i<110; i++) {
@@ -78,34 +71,29 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 	console.log(`goalkick for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
-	room.setDiscProperties(0, { color: forTeam == 1 ? colors.red : colors.blue })
-	setTimeout(() => {
-		if (savedEventCounter == game.eventCounter) { room.setDiscProperties(0, { color: colors.white })}
-	}, 1500)
-	room.setDiscProperties(0, { x: Math.sign(pos.x)*(mapBounds.x-80), y: 0, xspeed: 0, yspeed: 0})
+	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-80), y: 0}, savedEventCounter)
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
 		if (p.team != forTeam) {
 			// Collide with Box' joints
 			room.setPlayerDiscProperties(p.id, {cGroup: 268435462})
 			// Move back from the line
-			if (p.position.x < Math.sign(pos.x)*840 && p.position.y > -320 && p.position.y < 320) {
+			if (p.position.x > Math.sign(pos.x)*840 && p.position.y > -320 && p.position.y < 320) {
 				room.setPlayerDiscProperties(p.id, {x: Math.sign(pos.x)*825});
 			}
 		}
 	})
-	game.inPlay = false
 
 	// Blink if not played
 	for (let i=0; i<110; i++) {
 		// Cancel blink if there is another out
 		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
 		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 60) {
+		if (i > 90) {
 			clearGoalKickBlocks()
 			return
 		}
-		if (i > 40) {
+		if (i > 70) {
 			if (Math.floor(i/4)%2 == 0) {
 				room.setDiscProperties(0, {color: blinkColor})
 			} else {
@@ -121,9 +109,6 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
 	throwRealBall(game, forTeam, { x: pos.x, y: Math.sign(pos.y)*mapBounds.y }, savedEventCounter)
-	//setTimeout(() => {
-	//	if (savedEventCounter == game.eventCounter) { room.setDiscProperties(0, { color: colors.white })}
-	//}, 1500)
 	if (forTeam == 1) {
 		if (pos.y < 0) {
 			// show top red line
@@ -232,7 +217,6 @@ export const clearGoalKickBlocks = () => {
 }
 
 const throwFakeBall = async (ball: DiscPropertiesObject) => {
-		console.log('throwing fake ball')
 		let oldRadius = ball.radius
 		room.setDiscProperties(secondBallId, { x: ball.x, y: ball.y, xspeed: ball.xspeed, yspeed: ball.yspeed, radius: oldRadius })
 		for (let i=0; i<100; i++) {
@@ -247,16 +231,9 @@ const throwFakeBall = async (ball: DiscPropertiesObject) => {
 
 const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: number}, evCounter: number) => {
 	if (game.eventCounter != evCounter) { return }
-	console.log('throwing real ball')
 	game.animation = true
 	game.inPlay = false
-	const pos = room.getBallPosition()
-	//const pos = toPos
-	//room.setDiscProperties(0, {x: (pos.x+100)*Math.sign(pos.x), y: (pos.y+100)*Math.sign(pos.y)})
 	room.setDiscProperties(0, {radius: 0, xspeed: 0, yspeed: 0, cMask: 0})
-	//console.log('ball', room.getDiscProperties(0))
-	//console.log('fakeball', room.getDiscProperties(25))
-
 
 	const xx = Math.sign(Math.max(Math.abs(toPos.x)+1 - mapBounds.x, 0) * Math.sign(toPos.x))
 	const yy = Math.sign(Math.max(Math.abs(toPos.y)+1 - mapBounds.y, 0) * Math.sign(toPos.y))
@@ -269,17 +246,12 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 
 	const dist = 100  // distance from which ball is passed
 	const throwStrength = 0.0125  // ball pass strength
-
-
-
-
 	const spread = Math.PI/2  // can be between PI and 0 (0 will throw directly from horizontal or vertical line)
 	const angle = (Math.PI-spread)/2+Math.random()*spread+angleOffset
 	const throwFromX = Math.sin(angle)*dist+toPos.x
 	const throwFromY = (-Math.cos(angle))*dist+toPos.y
 	const throwSpeedX = Math.sin(angle+Math.PI)*dist*throwStrength
 	const throwSpeedY = (-Math.cos(angle+Math.PI))*dist*throwStrength
-	//console.log(`xx ${xx}, ${yy} yy, angleoffset ${angleOffset}, angle ${angle}\ntoPos ${toPos.x} ${toPos.y}, throwfrom ${throwFromX} ${throwFromY}, speed ${throwSpeedX} ${throwSpeedY}`)
 	await sleep(500+Math.random()*500)
 	room.setDiscProperties(thirdBallId, {
 			//color: forTeam == 1 ? colors.red : colors.blue,
@@ -292,15 +264,11 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		const thirdBall = room.getDiscProperties(thirdBallId)
 		const distToDest = Math.sqrt((thirdBall.x-toPos.x)**2+(thirdBall.y-toPos.y)**2)
 		if (distToDest<1) {
-			console.log('break')
 			break
 		}
 		await sleep(50)
 	}
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
 	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: 9, cMask: 63})
-	//setTimeout(() => {
-	//	if (evCounter == game.eventCounter) { room.setDiscProperties(thirdBallId, { color: colors.white })}
-	//}, 1500)
 	game.animation = false
 }
