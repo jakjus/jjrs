@@ -238,6 +238,7 @@ const throwFakeBall = async (ball: DiscPropertiesObject) => {
 		for (let i=0; i<100; i++) {
 			room.setDiscProperties(secondBallId, { radius: oldRadius })
 			if (i>40) {
+				if (oldRadius < 0.4) {return}
 				oldRadius -= 0.4
 			}
 			await sleep(30)
@@ -250,11 +251,15 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	game.animation = true
 	game.inPlay = false
 	const pos = room.getBallPosition()
+	//const pos = toPos
 	//room.setDiscProperties(0, {x: (pos.x+100)*Math.sign(pos.x), y: (pos.y+100)*Math.sign(pos.y)})
-	room.setDiscProperties(0, {radius: 2, xspeed: 0, yspeed: 0})
+	room.setDiscProperties(0, {radius: 0, xspeed: 0, yspeed: 0, cMask: 0})
+	//console.log('ball', room.getDiscProperties(0))
+	//console.log('fakeball', room.getDiscProperties(25))
 
-	const xx = Math.sign(Math.max(Math.abs(pos.x) - mapBounds.x, 0) * Math.sign(pos.x))
-	const yy = Math.sign(Math.max(Math.abs(pos.y) - mapBounds.y, 0) * Math.sign(pos.y))
+
+	const xx = Math.sign(Math.max(Math.abs(toPos.x)+1 - mapBounds.x, 0) * Math.sign(toPos.x))
+	const yy = Math.sign(Math.max(Math.abs(toPos.y)+1 - mapBounds.y, 0) * Math.sign(toPos.y))
 	const angleOffset = Math.atan2(yy, xx)
   //                       _..._
 	//                      /     \
@@ -263,27 +268,39 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	//                        '''
 
 	const dist = 100  // distance from which ball is passed
-	const spread = Math.PI  // can be between PI and 0 (0 will throw directly from horizontal or vertical line)
-	const angle = (Math.PI-spread)/2+Math.random()*spread+angleOffset
-	const throwSpeedFactor = 0.4  // chosen speed factor that makes ball slow down before arriving at the line
-	const throwFromX = Math.sin(angle)*dist+pos.x
-	const throwFromY = Math.cos(angle+Math.PI)*dist+pos.y
-	const throwSpeedX = Math.sin(angle+Math.PI)*dist**throwSpeedFactor
-	const throwSpeedY = Math.cos(angle)*dist**throwSpeedFactor
-	console.log(`xx ${xx}, ${yy} yy, angleoffset ${angleOffset}, angle ${angle}\npos ${pos.x} ${pos.y}, throwfrom ${throwFromX} ${throwFromY}, speed ${throwSpeedX} ${throwSpeedY}`)
+	const throwStrength = 0.0125  // ball pass strength
 
+
+
+
+	const spread = Math.PI/2  // can be between PI and 0 (0 will throw directly from horizontal or vertical line)
+	const angle = (Math.PI-spread)/2+Math.random()*spread+angleOffset
+	const throwFromX = Math.sin(angle)*dist+toPos.x
+	const throwFromY = (-Math.cos(angle))*dist+toPos.y
+	const throwSpeedX = Math.sin(angle+Math.PI)*dist*throwStrength
+	const throwSpeedY = (-Math.cos(angle+Math.PI))*dist*throwStrength
+	//console.log(`xx ${xx}, ${yy} yy, angleoffset ${angleOffset}, angle ${angle}\ntoPos ${toPos.x} ${toPos.y}, throwfrom ${throwFromX} ${throwFromY}, speed ${throwSpeedX} ${throwSpeedY}`)
+	await sleep(500+Math.random()*500)
 	room.setDiscProperties(thirdBallId, {
-			color: forTeam == 1 ? colors.red : colors.blue,
+			//color: forTeam == 1 ? colors.red : colors.blue,
 			x: throwFromX,
-			y: throwFromY+200,
+			y: throwFromY,
 			xspeed: throwSpeedX,
 			yspeed: throwSpeedY
 		})
-	//room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
-	//room.setDiscProperties(0, {x: toPos.x, y: toPos.y})
+	for (let i=0; i<1000; i++) {
+		const thirdBall = room.getDiscProperties(thirdBallId)
+		const distToDest = Math.sqrt((thirdBall.x-toPos.x)**2+(thirdBall.y-toPos.y)**2)
+		if (distToDest<1) {
+			console.log('break')
+			break
+		}
+		await sleep(50)
+	}
+	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
+	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: 9, cMask: 63})
 	//setTimeout(() => {
 	//	if (evCounter == game.eventCounter) { room.setDiscProperties(thirdBallId, { color: colors.white })}
 	//}, 1500)
-	await sleep(5000)
 	game.animation = false
 }
