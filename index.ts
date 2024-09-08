@@ -2,6 +2,7 @@ import { Headless } from "haxball.js"
 import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
 import { handleBallOutOfBounds, handleBallInPlay, clearThrowInBlocks } from "./src/out";
+import { checkAllX, rotateBall } from "./src/superpower"
 import * as fs from 'fs';
 
 export interface lastTouch {
@@ -16,6 +17,7 @@ export class PlayerAugmented {
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
   conn: string;
+  activation: number;
   team: 0 | 1 | 2;
   constructor(p: PlayerObject) {
     this.id = p.id;
@@ -24,34 +26,28 @@ export class PlayerAugmented {
     this.foulsMeter = 0;
     this.conn = p.conn;
     this.team = p.team;
+    this.activation = 0;
   }
   get position() { return room.getPlayer(this.id).position }
 }
 
 export class Game {
-  ticks: number;
   inPlay: boolean;
+  animation: boolean;
   eventCounter: number;
   //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
   lastTouch: lastTouch | null;
+  ballRotation: { x: number, y: number, power: number };
   constructor() {
     this.eventCounter = 0; // to debounce some events
-    this.ticks = 0;
     this.inPlay = true;
     this.lastTouch = null;
+    this.animation = false;
+    this.ballRotation = {x: 0, y: 0, power: 0}
     //this.state = "play";
   }
-  addTicks() {
-    if (this.inPlay) {
-      this.ticks++
-    }
-  }
-  handleEnd() {
-    // 60 ticks per second
-    if (this.ticks >= 5 * 60 * 60) {
-      console.log('stopping bcs time')
-      room.stopGame()
-    }
+  rotateBall() {
+    rotateBall(this)
   }
   handleBallTouch() {
     const ball = room.getDiscProperties(0)
@@ -70,6 +66,9 @@ export class Game {
   }
   handleBallInPlay() {
     handleBallInPlay(this)
+  }
+  checkAllX() {
+    checkAllX(this)
   }
 }
 
@@ -99,21 +98,41 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.setScoreLimit(0)
 
   //room.startGame()
-
-  room.onGameTick = () => {
-    if (!game) { return }
-    game.addTicks()
-    game.handleBallTouch()
-    if (game.inPlay) {
-      game.handleEnd()
-      game.handleBallOutOfBounds()
-    } else {
-      game.handleBallInPlay()
+  const loop = async () => {
+    if (!game || !room.getScores()) {
+      setTimeout(loop, 1000/60)
+      return
+    }
+    try {
+      game.handleBallTouch()
+      if (game.inPlay) {
+        game.handleBallOutOfBounds()
+      } else {
+        game.handleBallInPlay()
+      }
+    } catch(e) {
+      console.log(e)
+    }
+    finally {
+      setTimeout(loop, 1000/60)
     }
   }
 
+  loop()
+
+  room.onGameTick = () => {
+    if (!game) { return }
+    game.checkAllX()
+    game.rotateBall()
+  }
+
   room.onPlayerJoin = async p => {
-    process.env.DEBUG && room.setPlayerAdmin(p.id, true)
+    if (process.env.DEBUG) {
+      room.setPlayerAdmin(p.id, true)
+      room.setPlayerTeam(p.id, 1)
+      room.startGame()
+      room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
+    }
     const newPlayer = new PlayerAugmented(p)
     players.push(newPlayer)
   }
@@ -128,10 +147,12 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       console.log('paug', pp)
       console.log('props', room.getPlayerDiscProperties(p.id))
     }
+
     if (isCommand(msg)){
       handleCommand(pp, msg)
       return false
     }
+
     playerMessage(pp, msg)
     return false
   }
@@ -139,10 +160,14 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onGameStart = _ => {
     game = new Game()
     clearThrowInBlocks()
+    room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, " "))
   }
 
   room.onPositionsReset = () => {
     clearThrowInBlocks()
+    if (game) {
+      game.ballRotation = { x:0, y:0, power:0 }
+    }
   }
 
   room.onGameStop = _ => {
@@ -154,8 +179,12 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerBallKick = p => {
+    room.sendAnnouncement('ballkick')
     if (game) {
       game.lastTouch = { byPlayer: toAug(p), x: p.position.x, y: p.position.y }
+      const pp = toAug(p)
+      pp.activation = 0
+      room.setPlayerAvatar(p.id, "")
     }
   }
 
