@@ -3,6 +3,7 @@ import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
 import { handleBallOutOfBounds, handleBallInPlay, clearThrowInBlocks } from "./src/out";
 import { checkAllX, rotateBall } from "./src/superpower"
+import { handleLastTouch } from "./src/offside"
 import * as fs from 'fs';
 
 export interface lastTouch {
@@ -38,12 +39,16 @@ export class Game {
   //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
   lastTouch: lastTouch | null;
   ballRotation: { x: number, y: number, power: number };
+  positionsDuringPass: PlayerObject[];
+  skipOffsideCheck: boolean;
   constructor() {
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
     this.animation = false;
     this.ballRotation = {x: 0, y: 0, power: 0}
+    this.positionsDuringPass = []
+    this.skipOffsideCheck = false
     //this.state = "play";
   }
   rotateBall() {
@@ -55,8 +60,10 @@ export class Game {
     for (const p of room.getPlayerList()) {
       const prop = room.getPlayerDiscProperties(p.id)
       if (!prop) { continue }
-      if (Math.sqrt((prop.x - ball.x)**2+(prop.y - ball.y)**2) < (prop.radius + ball.radius + 0.05)) {
-        this.lastTouch = { byPlayer: toAug(p), x: prop.x, y: prop.y }
+      const dist = Math.sqrt((prop.x - ball.x)**2+(prop.y - ball.y)**2)
+      const isTouching = dist < (prop.radius + ball.radius + 0.1)
+      if (isTouching) {
+        handleLastTouch(this, toAug(p))
         return
       }
     }
@@ -104,7 +111,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       return
     }
     try {
-      game.handleBallTouch()
       if (game.inPlay) {
         game.handleBallOutOfBounds()
       } else {
@@ -122,6 +128,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onGameTick = () => {
     if (!game) { return }
+    game.handleBallTouch()
     game.checkAllX()
     game.rotateBall()
   }
@@ -132,6 +139,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       room.setPlayerTeam(p.id, 1)
       room.startGame()
       room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
+      room.setPlayerAvatar(p.id, "")
     }
     const newPlayer = new PlayerAugmented(p)
     players.push(newPlayer)
@@ -160,7 +168,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onGameStart = _ => {
     game = new Game()
     clearThrowInBlocks()
-    room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, " "))
+    room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
   }
 
   room.onPositionsReset = () => {
@@ -181,8 +189,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerBallKick = p => {
     room.sendAnnouncement('ballkick')
     if (game) {
-      game.lastTouch = { byPlayer: toAug(p), x: p.position.x, y: p.position.y }
       const pp = toAug(p)
+      handleLastTouch(game, pp)
       pp.activation = 0
       room.setPlayerAvatar(p.id, "")
     }

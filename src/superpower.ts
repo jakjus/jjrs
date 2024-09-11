@@ -1,4 +1,5 @@
 import { toAug, room, players, PlayerAugmented, Game } from "../index"
+import { handleLastTouch } from "./offside"
 import { defaults } from "./settings"
 
 export const checkAllX = (game: Game) => {
@@ -42,7 +43,7 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
 }
 
 const finKick = (game: Game, p: PlayerAugmented) => {
-	//if (!game.inPlay) { return }
+	if (game.animation) { return }
 	const props = room.getPlayerDiscProperties(p.id)
 	const ball = room.getDiscProperties(0)
 	const dist = Math.sqrt((props.x-ball.x)**2+(props.y-ball.y)**2)
@@ -74,7 +75,7 @@ const finKick = (game: Game, p: PlayerAugmented) => {
 	const vecYsp = props.yspeed/spMagnitude
 
 	game.ballRotation = { x: -vecXsp, y: -vecYsp, power: spMagnitude*(activationRange-dist)**0.2*6}
-	game.lastTouch = { byPlayer: p, x: props.x, y: props.y }
+	handleLastTouch(game, p)
 }
 
 export const rotateBall = (game: Game) => {
