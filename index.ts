@@ -4,7 +4,9 @@ import { playerMessage } from "./src/message"
 import { handleBallOutOfBounds, handleBallInPlay, clearThrowInBlocks } from "./src/out";
 import { checkAllX, rotateBall } from "./src/superpower"
 import { handleLastTouch } from "./src/offside"
+import { checkFoul } from "./src/foul"
 import * as fs from 'fs';
+import { applySlowdown } from "./src/slowdown";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented,
@@ -17,17 +19,29 @@ export class PlayerAugmented {
   name: string;
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
+  cardsAnnounced: number; // 0: no cards, 1: yellow card, 2: red card
+  sliding: boolean;
   conn: string;
   activation: number;
   team: 0 | 1 | 2;
-  constructor(p: PlayerObject) {
+  slowdown: number;
+  slowdownUntil: number;
+  fouledAt: { x: number, y: number };
+  canCallFoulUntil: number;
+  constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
     this.name = p.name;
     this.auth = p.auth;
-    this.foulsMeter = 0;
+    this.foulsMeter = p.foulsMeter || 0;
+    this.cardsAnnounced = p.cardsAnnounced || 0;
     this.conn = p.conn;
     this.team = p.team;
     this.activation = 0;
+    this.sliding = false;
+    this.slowdown = 0;
+    this.slowdownUntil = 0;
+    this.canCallFoulUntil = 0;
+    this.fouledAt = { x: 0, y: 0 }
   }
   get position() { return room.getPlayer(this.id).position }
 }
@@ -41,14 +55,17 @@ export class Game {
   ballRotation: { x: number, y: number, power: number };
   positionsDuringPass: PlayerObject[];
   skipOffsideCheck: boolean;
+  sentoffOrEscaped: PlayerAugmented[];
+
   constructor() {
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
     this.animation = false;
-    this.ballRotation = {x: 0, y: 0, power: 0}
-    this.positionsDuringPass = []
-    this.skipOffsideCheck = false
+    this.ballRotation = {x: 0, y: 0, power: 0};
+    this.positionsDuringPass = [];
+    this.skipOffsideCheck = false;
+    this.sentoffOrEscaped = [];
     //this.state = "play";
   }
   rotateBall() {
@@ -63,7 +80,9 @@ export class Game {
       const dist = Math.sqrt((prop.x - ball.x)**2+(prop.y - ball.y)**2)
       const isTouching = dist < (prop.radius + ball.radius + 0.1)
       if (isTouching) {
-        handleLastTouch(this, toAug(p))
+        const pAug = toAug(p)
+        pAug.sliding = false
+        handleLastTouch(this, pAug)
         return
       }
     }
@@ -77,6 +96,12 @@ export class Game {
   checkAllX() {
     checkAllX(this)
   }
+  checkFoul() {
+    checkFoul(this)
+  }
+  applySlowdown() {
+    applySlowdown()
+  }
 }
 
 
@@ -84,7 +109,7 @@ export let players: PlayerAugmented[] = []
 export let toAug = (p: PlayerObject) => {
   const found = players.find(pp => pp.id == p.id)
   if (!found) {
-    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${players}`)
+    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${JSON.stringify(players)}`)
   }
   return found
 }
@@ -126,11 +151,18 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   loop()
 
+  let i = 0;
   room.onGameTick = () => {
     if (!game) { return }
     game.handleBallTouch()
     game.checkAllX()
     game.rotateBall()
+    game.checkFoul()
+    i++;
+    if (i > 6) {
+      i = 0
+      game.applySlowdown()
+    }
   }
 
   room.onPlayerJoin = async p => {
@@ -138,14 +170,21 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       room.setPlayerAdmin(p.id, true)
       room.setPlayerTeam(p.id, 1)
       room.startGame()
-      room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
       room.setPlayerAvatar(p.id, "")
     }
-    const newPlayer = new PlayerAugmented(p)
+    let newPlayer = new PlayerAugmented(p)
+    if (game) {
+      const found = game.sentoffOrEscaped.find(pp => pp.auth == p.auth)
+      if (found) {
+        newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.cardsAnnounced  })
+      }
+    }
     players.push(newPlayer)
+    console.log('after join', players)
   }
 
   room.onPlayerLeave = async p => {
+    game?.sentoffOrEscaped.push(toAug(p))
     players = players.filter(pp => p.id != pp.id)
   }
 
@@ -183,6 +222,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerTeamChange = p => {
+    if (process.env.DEBUG) {
+      room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
+    }
     toAug(p).team = p.team
   }
 

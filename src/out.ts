@@ -1,6 +1,7 @@
 import { room, Game } from '../index';
 import { mapBounds, goals, defaults, colors, secondBallId, thirdBallId } from './settings';
 import { sleep } from './utils'
+import { announceCards } from './foul';
 
 
 export const handleBallOutOfBounds = async (game: Game) => {
@@ -35,6 +36,7 @@ export const handleBallOutOfBounds = async (game: Game) => {
 }
 
 const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
+	announceCards(game)
 	console.log(`corner for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
@@ -66,6 +68,7 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 }
 
 const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
+	announceCards(game)
 	console.log(`goalkick for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
@@ -100,6 +103,7 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 }
 
 const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
+	announceCards(game)
 	game.eventCounter += 1
 	game.skipOffsideCheck = true
 	const savedEventCounter = game.eventCounter
@@ -163,6 +167,49 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 	}
 	const newForTeam = forTeam == 1 ? 2 : 1
 	throwIn(game, newForTeam, pos)
+}
+
+export const freeKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
+	announceCards(game)
+	console.log(`freekick for ${forTeam}`)
+	room.pauseGame(true)
+	game.eventCounter += 1
+	const savedEventCounter = game.eventCounter
+	throwRealBall(game, forTeam, pos, savedEventCounter)
+	const blockerId = forTeam == 1 ? 2 : 1
+	const notBlockerId = forTeam == 1 ? 1 : 2
+	const defMoveDirection = forTeam == 1 ? 1 : -1
+	room.getPlayerList().filter(p => p.team != forTeam && p.team != 0)
+	.forEach(p => {
+		const props = room.getPlayerDiscProperties(p.id)
+		room.setPlayerDiscProperties(p.id, { x: pos.x + defMoveDirection*(Math.random()*200+50)})
+	})
+
+
+	room.setDiscProperties(blockerId, {...pos, radius: 220 });
+	room.setDiscProperties(notBlockerId, {x: 500, y: 1200});
+	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
+		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
+	})
+	await sleep(100)
+	room.pauseGame(false)
+	game.inPlay = false
+
+	// Blink if not played
+	for (let i=0; i<100; i++) {
+		// Cancel blink if there is another out
+		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
+		const blinkColor = forTeam == 1 ? colors.red : colors.blue
+		if (i > 80) {
+			if (Math.floor(i/3)%2 == 0) {
+				room.setDiscProperties(0, {color: blinkColor})
+			} else {
+				room.setDiscProperties(0, {color: colors.white })
+			}
+		}
+		await sleep(100)
+	}
+	clearCornerBlocks()
 }
 
 export const handleBallInPlay = async (game: Game) => {
@@ -229,7 +276,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	game.inPlay = false
 	game.ballRotation = { x: 0, y: 0, power: 0 }
 	const xPushOutOfSight = Math.abs(toPos.x) > mapBounds.x-5 ? Math.sign(toPos.x)*(mapBounds.x+250) : toPos.x
-	const yPushOutOfSight = Math.abs(toPos.y) > mapBounds.y-5 ? Math.sign(toPos.x)*(mapBounds.y+250) : toPos.y
+	const yPushOutOfSight = Math.abs(toPos.y) > mapBounds.y-5 ? Math.sign(toPos.y)*(mapBounds.y+250) : toPos.y
 	room
 	.setDiscProperties(0, {
 		radius: 0,
@@ -280,46 +327,4 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
 	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass})
 	game.animation = false
-}
-
-export const freeKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
-	console.log(`freekick for ${forTeam}`)
-	room.pauseGame(true)
-	game.eventCounter += 1
-	const savedEventCounter = game.eventCounter
-	throwRealBall(game, forTeam, pos, savedEventCounter)
-	const blockerId = forTeam == 1 ? 2 : 1
-	const notBlockerId = forTeam == 1 ? 1 : 2
-	const defMoveDirection = forTeam == 1 ? 1 : -1
-	room.getPlayerList().filter(p => p.team != forTeam && p.team != 0)
-	.forEach(p => {
-		const props = room.getPlayerDiscProperties(p.id)
-		room.setPlayerDiscProperties(p.id, { x: pos.x + defMoveDirection*(Math.random()*200+50)})
-	})
-
-
-	room.setDiscProperties(blockerId, {...pos, radius: 220 });
-	room.setDiscProperties(notBlockerId, {x: 500, y: 1200});
-	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
-		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
-	})
-	await sleep(100)
-	room.pauseGame(false)
-	game.inPlay = false
-
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
-	clearCornerBlocks()
 }
