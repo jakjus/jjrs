@@ -48,7 +48,8 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
 	})
-	game.inPlay = false
+
+	game.rotateNextKick = true
 
 	// Blink if not played
 	for (let i=0; i<100; i++) {
@@ -84,6 +85,8 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 			}
 		}
 	})
+
+	game.rotateNextKick = true
 
 	// Blink if not played
 	for (let i=0; i<100; i++) {
@@ -193,7 +196,7 @@ export const freeKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: 
 	})
 	await sleep(100)
 	room.pauseGame(false)
-	game.inPlay = false
+	game.rotateNextKick = true
 
 	// Blink if not played
 	for (let i=0; i<100; i++) {
@@ -323,8 +326,16 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		}
 		await sleep(50)
 	}
+
 	// Hide fake ball and replace with real ball
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
-	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass})
+	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.4 : defaults.ballInvMass
+	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass })
+	// allow fast pass during first second, then set mass for long pass
 	game.animation = false
+	await sleep(1000)
+	if (evCounter == game.eventCounter) {
+		console.log('setting to '+toMass)
+		room.setDiscProperties(0, { invMass: toMass, color: 0xebf0ce })
+	}
 }

@@ -43,7 +43,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	room.setPlayerAvatar(victim.id, av)
 	victim.slowdown = slowdown
 	victim.slowdownUntil = new Date().getTime()+1000*(power*10+power**4*8*Math.random()*Math.random())
-	victim.canCallFoulUntil = new Date().getTime()+3000
+	victim.canCallFoulUntil = new Date().getTime()+4000
 	victim.fouledAt = { x: victimProps.x, y: victimProps.y }
 	room.sendAnnouncement(victim.name+' can call foul by holding X')
 	slider.foulsMeter += power*cardsFactor
@@ -64,8 +64,7 @@ export const announceCards = (game: Game) => {
 				console.log('sentoff is', game.sentoffOrEscaped)
 				room.sendAnnouncement('red card for '+p.name)
 			}
-			p.cardsAnnounced = Math.floor(p.foulsMeter)
+			p.cardsAnnounced = p.foulsMeter
 		}
 	})
-
 }

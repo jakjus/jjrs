@@ -88,6 +88,8 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 		return
 	}
 	room.setPlayerAvatar(p.id, "🎯");
+	game.rotateNextKick = false
+	room.setDiscProperties(0, { invMass: defaults.ballInvMass })
 
 	const xx = ball.x-props.x
 	const yy = ball.y-props.y
