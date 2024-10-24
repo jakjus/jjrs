@@ -7,6 +7,8 @@ import { handleLastTouch } from "./src/offside"
 import { checkFoul } from "./src/foul"
 import * as fs from 'fs';
 import { applySlowdown } from "./src/slowdown";
+import { defaults } from "./src/settings";
+import initChooser from "./src/chooser";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented,
@@ -19,7 +21,7 @@ export class PlayerAugmented {
   name: string;
   auth: string;  // so that it doesn't disappear
   foulsMeter: number; // can be a decimal. over 1.0 => yellow card, over 2.0 => red card
-  cardsAnnounced: number; // 0: no cards, 1: yellow card, 2: red card
+  cardsAnnounced: number; // same as foulsMeter
   sliding: boolean;
   conn: string;
   activation: number;
@@ -28,6 +30,7 @@ export class PlayerAugmented {
   slowdownUntil: number;
   fouledAt: { x: number, y: number };
   canCallFoulUntil: number;
+  afk: boolean;
   constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
     this.name = p.name;
@@ -41,7 +44,8 @@ export class PlayerAugmented {
     this.slowdown = 0;
     this.slowdownUntil = 0;
     this.canCallFoulUntil = 0;
-    this.fouledAt = { x: 0, y: 0 }
+    this.fouledAt = { x: 0, y: 0 };
+    this.afk = false;
   }
   get position() { return room.getPlayer(this.id).position }
 }
@@ -50,12 +54,12 @@ export class Game {
   inPlay: boolean;
   animation: boolean;
   eventCounter: number;
-  //state: "play" | "ti" | "os" | "gk" | "ck" | "fk" | "pen";
   lastTouch: lastTouch | null;
   ballRotation: { x: number, y: number, power: number };
   positionsDuringPass: PlayerObject[];
   skipOffsideCheck: boolean;
-  sentoffOrEscaped: PlayerAugmented[];
+  currentPlayers: PlayerAugmented[];
+  rotateNextKick: boolean;
 
   constructor() {
     this.eventCounter = 0; // to debounce some events
@@ -65,7 +69,8 @@ export class Game {
     this.ballRotation = {x: 0, y: 0, power: 0};
     this.positionsDuringPass = [];
     this.skipOffsideCheck = false;
-    this.sentoffOrEscaped = [];
+    this.currentPlayers = [...players];
+    this.rotateNextKick = false;
     //this.state = "play";
   }
   rotateBall() {
@@ -119,7 +124,8 @@ export let game: Game | null;
 
 process.stdin.on("data", d => {
   const r = room
-  console.log(eval(d.toString()))
+  const result = eval(d.toString()).catch((d: string) => console.error(d))
+  console.log(result)
 })
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
@@ -135,21 +141,15 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       setTimeout(loop, 1000/60)
       return
     }
-    try {
-      if (game.inPlay) {
-        game.handleBallOutOfBounds()
-      } else {
-        game.handleBallInPlay()
-      }
-    } catch(e) {
-      console.log(e)
+    if (game.inPlay) {
+      game.handleBallOutOfBounds()
+    } else {
+      game.handleBallInPlay()
     }
-    finally {
-      setTimeout(loop, 1000/60)
-    }
+    setTimeout(loop, 1000/60)
   }
 
-  loop()
+  loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
 
   let i = 0;
   room.onGameTick = () => {
@@ -174,7 +174,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     }
     let newPlayer = new PlayerAugmented(p)
     if (game) {
-      const found = game.sentoffOrEscaped.find(pp => pp.auth == p.auth)
+      const found = game.currentPlayers.find(pp => pp.auth == p.auth)
       if (found) {
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.cardsAnnounced  })
       }
@@ -184,7 +184,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerLeave = async p => {
-    game?.sentoffOrEscaped.push(toAug(p))
     players = players.filter(pp => p.id != pp.id)
   }
 
@@ -193,6 +192,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (process.env.DEBUG) {
       console.log('paug', pp)
       console.log('props', room.getPlayerDiscProperties(p.id))
+      console.log('ball', room.getDiscProperties(0))
+      console.log('game', game)
     }
 
     if (isCommand(msg)){
@@ -232,15 +233,30 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     room.sendAnnouncement('ballkick')
     if (game) {
       const pp = toAug(p)
+      if (game.rotateNextKick) {
+        const props = room.getPlayerDiscProperties(p.id)
+        const spMagnitude = Math.sqrt(props.xspeed**2+props.yspeed**2)
+        const vecXsp = props.xspeed/spMagnitude
+        const vecYsp = props.yspeed/spMagnitude
+
+        game.ballRotation = { x: -vecXsp, y: -vecYsp, power: spMagnitude**0.5*10}
+        game.rotateNextKick = false
+        room.setDiscProperties(0, { invMass: defaults.ballInvMass })
+      }
+
       handleLastTouch(game, pp)
-      pp.activation = 0
-      room.setPlayerAvatar(p.id, "")
+      if (pp.activation > 20) {
+        pp.activation = 0
+        room.setPlayerAvatar(p.id, "")
+      }
     }
   }
 
   room.onRoomLink = url => {
     console.log(`Room link: ${url}`)
   }
+
+  initChooser(room) // must be called at the end
 }
 
 export default roomBuilder;

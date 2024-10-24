@@ -45,10 +45,8 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	victim.slowdownUntil = new Date().getTime()+1000*(power*10+power**4*8*Math.random()*Math.random())
 	victim.canCallFoulUntil = new Date().getTime()+4000
 	victim.fouledAt = { x: victimProps.x, y: victimProps.y }
-	room.sendAnnouncement(victim.name+' can call foul by holding X')
+	room.sendAnnouncement(victim.name+' can call foul by holding X in the next 4 seconds')
 	slider.foulsMeter += power*cardsFactor
-	console.log(slider)
-	console.log(victim)
 }
 
 export const announceCards = (game: Game) => {
@@ -59,9 +57,7 @@ export const announceCards = (game: Game) => {
 				room.sendAnnouncement('yellow card for '+p.name)
 			} else if (p.foulsMeter >= 2) {
 				room.setPlayerAvatar(p.id, "🟥")
-				game.sentoffOrEscaped.push(p)
 				room.setPlayerTeam(p.id, 0)
-				console.log('sentoff is', game.sentoffOrEscaped)
 				room.sendAnnouncement('red card for '+p.name)
 			}
 			p.cardsAnnounced = p.foulsMeter

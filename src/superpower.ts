@@ -36,7 +36,7 @@ export const checkAllX = (game: Game) => {
 			pp.activation = 0
 			room.sendAnnouncement('sprint')
 			sprint(game, pp)
-			room.setPlayerAvatar(pp.id, '🏃')
+			room.setPlayerAvatar(pp.id, '💨')
 			setTimeout(() => room.setPlayerAvatar(pp.id, ""), 700)
 		} else {
 			pp.activation = 0
