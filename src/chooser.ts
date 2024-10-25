@@ -7,7 +7,7 @@ const initChooser = (room: RoomObject) => {
 	let isRunning: boolean = false;
 	let isRanked: boolean = false;
 	let duringDraft: boolean = false;
-	const maxTeamSize = 1
+	const maxTeamSize = 2
 
 	const red = () => room.getPlayerList().filter(p => p.team == 1)
 	const blue = () => room.getPlayerList().filter(p => p.team == 2)
@@ -103,35 +103,41 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 			room.startGame()
 			// set blue players kickable (kicking them by red results in
 			// choose)
-			rd.slice(0,2).forEach(p => room.setPlayerTeam(p.id, 1))
+			rd.slice(0,2).forEach(p => {
+				room.setPlayerTeam(p.id, 1);
+				room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
+			})
 			const redPicker = rd[0]
 			const bluePicker = rd[1]
-			rd.slice(2).forEach(p => 
+			rd.slice(2).forEach(p =>
 													{ room.setPlayerTeam(p.id, 2)
-													room.setPlayerDiscProperties(p.id, { cGroup: 66 | room.CollisionFlags.c3 })
+													room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 													})
-			room.sendAnnouncement('enter the draft area (10s)')
-			await sleep(10000)
-			room.getPlayerList().filter(p => p.team = 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: 66 }))  // dont collide with middle line blocks
+			room.sendAnnouncement('enter the draft area (15s)')
+			await sleep(15000)
+			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
 			const setLock = (p: PlayerObject) => {
 					const props = room.getPlayerDiscProperties(p.id)
-					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 })
-					if (Math.abs(props.x) <= 25) {
-						room.setPlayerDiscProperties(p.id, {x: Math.sign(props.x)*40})
+					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
+					if (Math.abs(props.x) <= 48) {
+						room.setPlayerDiscProperties(p.id, {x: Math.sign(props.x)*63})
 					}
 			}
 
 			const setUnlock = (p: PlayerObject) => {
-					const props = room.getPlayerDiscProperties(p.id)
-					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red })
+					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c1 })
 			}
 
 			const redZone = {x: [-360, -210], y: [0, 300]}
 			const blueZone = {x: [210, 360], y: [0, 300]}
 
 			const playersInZone = (zone: {x: number[], y: number[]}) => room.getPlayerList().filter(p => p.team == 2).filter(p => {
+				if (!room.getScores()) {
+					console.log('DRAFT: Map was stopped, quitting draft...')
+					return
+				}
 					const props = room.getPlayerDiscProperties(p.id)
-					return props.x > zone.x[0] && props.x < zone.x[1] && props.y > zone.y[0] && props.x < zone.y[1]
+					return props.x > zone.x[0] && props.x < zone.x[1] && props.y > zone.y[0] && props.y < zone.y[1]
 				})
 			// segment [62] and [63] is middle draft block
 			// segment [64] is left chooser block
@@ -140,35 +146,38 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 			// spawn: x: -150, y: 150
 			// x: 25
 
-			let countRed = 1  // picker is already in red
-			let countBlue = 1
-			let currentPickIndex = 0
+			room.sendAnnouncement('p1 picks teammate')
 			let pickingNow = 'red'
-			while ((countRed != maxTeamSize || countBlue != maxTeamSize) && currentPickIndex < (maxTeamSize-1)*2) {
+			setUnlock(redPicker)
+			while (playersInZone(redZone).length != maxTeamSize-1 || playersInZone(blueZone).length != maxTeamSize-1) {
 				if (pickingNow == 'red') {
-					if (playersInZone(redZone).length < playersInZone(blueZone).length+1) {
+					if (playersInZone(redZone).length >= playersInZone(blueZone).length+1) {
 						pickingNow = 'blue'
+						room.sendAnnouncement('p2 picks teammate')
+						setUnlock(bluePicker)
+						setLock(redPicker)
 						continue
 					}
-					setUnlock(redPicker)
-					setLock(bluePicker)
-					room.sendAnnouncement('p1 picks teammate')
 					//check and if success, currentPickIndex+=1
 				} else {
-					if (playersInZone(blueZone).length < playersInZone(redZone).length+1) {
-						pickingNow = 'blue'
+					if (playersInZone(blueZone).length >= playersInZone(redZone).length+1) {
+						pickingNow = 'red'
+						room.sendAnnouncement('p1 picks teammate')
+						setUnlock(redPicker)
+						setLock(bluePicker)
 						continue
 					}
-					setUnlock(bluePicker)
-					setLock(redPicker)
-					room.sendAnnouncement('p2 picks teammate')
-					await sleep(5000)
 				}
+				room.sendAnnouncement('sleeping...')
+				await sleep(1000)
 			}
 			// fill empty spots with other
+			const red = [...playersInZone(redZone), redPicker]
+			const blue = [...playersInZone(blueZone), redPicker]
 			room.stopGame()
 			room.sendAnnouncement('finished')
-			return { red: rd, blue: rd, full: false }
+			console.log('draft result: ', { red, blue, full: true })
+			return { red, blue, full: true }
 }
 
 export default initChooser;

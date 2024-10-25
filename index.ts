@@ -224,7 +224,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onPlayerTeamChange = p => {
     if (process.env.DEBUG) {
-      room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
+      //room.setPlayerDiscProperties(p.id, {x: -10, y: 0})
     }
     toAug(p).team = p.team
   }
