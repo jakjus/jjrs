@@ -180,7 +180,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       }
     }
     players.push(newPlayer)
-    console.log('after join', players)
   }
 
   room.onPlayerLeave = async p => {

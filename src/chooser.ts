@@ -120,8 +120,8 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 				room.setPlayerTeam(p.id, 1);
 				room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 			})
-			const redPicker = rd[0]
-			const bluePicker = rd[1]
+			let redPicker = rd[0]
+			let bluePicker = rd[1]
 			rd.slice(2).forEach(p =>
 													{ room.setPlayerTeam(p.id, 2)
 													room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
@@ -146,6 +146,7 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 			const midZone = {x: [-15, 15], y: [-300, 600]}
 
 			const playersInZone = (zone: {x: number[], y: number[]}) => room.getPlayerList().filter(p => p.team == 2).filter(p => {
+					if (!room.getScores()) { return [] }
 					const props = room.getPlayerDiscProperties(p.id)
 					return props.x > zone.x[0] && props.x < zone.x[1] && props.y > zone.y[0] && props.y < zone.y[1]
 				})
@@ -159,23 +160,79 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 			room.sendAnnouncement('p1 picks teammate')
 			let pickingNow = 'red'
 			let totalWait = 0
-			let skippedPicks = 0
+			let skippedPicksRed = 0
+			let skippedPicksBlue = 0
 			const pickTimeLimit = 10000 // ms
 			const sleepTime = 100 // ms
 			setUnlock(redPicker)
 			while ((playersInZone(redZone).length != maxTeamSize-1 || playersInZone(blueZone).length != maxTeamSize-1) && playersInZone(midZone).length != 0) {
-				if (skippedPicks == 2) {
-					room.sendAnnouncement('both sides skipped pick. quitting draft')
-					break
+
+				const setNewPickerRed = () => {
+					if (room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+						room.setPlayerTeam(redPicker.id, 0)
+					}
+					const midPlayers = playersInZone(midZone)
+					redPicker = midPlayers[0]
+					room.setPlayerTeam(redPicker.id, 1)
+					room.setPlayerDiscProperties(redPicker.id, {x: 120, y: 0})
+					if (pickingNow == 'red') {
+						setUnlock(redPicker)
+					} else {
+						setLock(redPicker)
+					}
+					totalWait = 0
+					skippedPicksRed = 0
+					skippedPicksBlue = 0
+				}
+
+				const setNewPickerBlue = () => {
+					if (room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+						room.setPlayerTeam(redPicker.id, 0)
+					}
+					const midPlayers = playersInZone(midZone)
+					bluePicker = midPlayers[0]
+					room.setPlayerTeam(bluePicker.id, 1)
+					room.setPlayerDiscProperties(redPicker.id, {x: 120, y: 0})
+					if (pickingNow == 'blue') {
+						setUnlock(bluePicker)
+					} else {
+						setLock(bluePicker)
+					}
+					totalWait = 0
+					skippedPicksRed = 0
+					skippedPicksBlue = 0
+				}
+
+				// if picker left
+				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+					room.sendAnnouncement('red picker left. changing red picker')
+					setNewPickerRed()
+				}
+				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+					room.sendAnnouncement('blue picker left. changing blue picker')
+					setNewPickerBlue()
+				}
+
+
+
+				// if red did not choose 2
+				if (skippedPicksRed == 2) {
+					setNewPickerRed()
+					room.sendAnnouncement('red side skipped pick. changing picker')
+					continue
+				} else if (skippedPicksBlue == 2) {
+					setNewPickerBlue()
+					room.sendAnnouncement('blue side skipped picks. changing picker')
+					continue
 				}
 				totalWait += sleepTime
 				if (pickingNow == 'red') {
 					if (playersInZone(redZone).length >= playersInZone(blueZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							room.sendAnnouncement('timeout')
-							skippedPicks += 1
+							skippedPicksRed += 1
 						} else {
-							skippedPicks = 0
+							skippedPicksRed = 0
 						}
 						pickingNow = 'blue'
 						room.sendAnnouncement('p2 picks teammate')
@@ -188,9 +245,9 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 					if (playersInZone(blueZone).length >= playersInZone(redZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							room.sendAnnouncement('timeout')
-							skippedPicks += 1
+							skippedPicksBlue += 1
 						} else {
-							skippedPicks = 0
+							skippedPicksBlue = 0
 						}
 						pickingNow = 'red'
 						room.sendAnnouncement('p1 picks teammate')
@@ -200,7 +257,6 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 						continue
 					}
 				}
-				room.sendAnnouncement('sleeping...')
 				await sleep(sleepTime)
 				if (!room.getScores()) {
 					room.sendAnnouncement('draft cancelled')
