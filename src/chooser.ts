@@ -1,28 +1,38 @@
-import { PlayerAugmented } from "..";
+import { room } from "..";
 import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
 
-const initChooser = (room: RoomObject) => {
-	let isRunning: boolean = false;
-	let isRanked: boolean = false;
-	let duringDraft: boolean = false;
-	const maxTeamSize = 2
+let isRunning: boolean = false;
+let isRanked: boolean = false;
+let duringDraft: boolean = false;
+const maxTeamSize = 3
+const red = () => room.getPlayerList().filter(p => p.team == 1)
+const blue = () => room.getPlayerList().filter(p => p.team == 2)
+const spec = () => room.getPlayerList().filter(p => p.team == 0)
+const both = () => room.getPlayerList().filter(p => p.team == 1 || p.team == 2)
+const ready = () => room.getPlayerList().filter(p => !toAug(p).afk)
 
+export const addToGame = (room: RoomObject, p: PlayerObject) => {
+	if (isRanked) {
+		return
+	}
+	if (duringDraft) {
+		room.setPlayerTeam(p.id, 2)
+		return
+	}
 	const red = () => room.getPlayerList().filter(p => p.team == 1)
 	const blue = () => room.getPlayerList().filter(p => p.team == 2)
-	const spec = () => room.getPlayerList().filter(p => p.team == 0)
-	const both = () => room.getPlayerList().filter(p => p.team == 1 || p.team == 2)
-	const ready = () => room.getPlayerList().filter(p => !toAug(p).afk)
+	if (red().length > blue().length) {
+		room.setPlayerTeam(p.id, 2)
+	} else {
+		room.setPlayerTeam(p.id, 1)
+	}
+}
+
+const initChooser = (room: RoomObject) => {
 	console.log('playerlist', room.getPlayerList())
 
-	const addToGame = (p: PlayerObject) => {
-		if (red().length > blue().length) {
-			room.setPlayerTeam(p.id, 2)
-		} else {
-			room.setPlayerTeam(p.id, 1)
-		}
-	}
 
 	const balanceTeams = () => {
 		// To be used only during unranked
@@ -33,22 +43,26 @@ const initChooser = (room: RoomObject) => {
 		}
 	}
 
+	const refill = () => {
+		while (red().length + blue().length < maxTeamSize*2 && spec().filter(p => !toAug(p).afk).length > 0) {
+			addToGame(room, spec()[0])
+		}
+	}
+
 	const isEnoughPlayers = () => ready().length >= maxTeamSize*2
 
 	const _onPlayerJoin = room.onPlayerJoin
 	room.onPlayerJoin = p => {
 		_onPlayerJoin(p)
-		if (!isRanked) {
-			addToGame(p)
-		}
+		addToGame(room, p)
 	}
 
 	const _onPlayerLeave = room.onPlayerLeave
 	room.onPlayerLeave = p => {
 		if (!isEnoughPlayers()) {
 			isRanked = false
-		}
-		if (!isRanked) {
+			room.sendAnnouncement('non ranked game')
+			refill()
 			balanceTeams()
 		}
 		_onPlayerLeave(p)
@@ -69,10 +83,10 @@ const initChooser = (room: RoomObject) => {
 		}
 		room.sendAnnouncement('5 seconds break')
 		await sleep(5000)
-		if (isEnoughPlayers()) {
+		if (ready().length >= 4) {
 			const rd = ready()
 			duringDraft = true
-			const draftResult = await performDraft(room, rd, maxTeamSize);
+			const draftResult = await performDraft(room, rd, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
 			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)
 			duringDraft = false
@@ -83,9 +97,26 @@ const initChooser = (room: RoomObject) => {
 			})
 			draftResult?.red?.forEach(p => room.setPlayerTeam(p.id, 1))
 			draftResult?.blue?.forEach(p => room.setPlayerTeam(p.id, 2))
+			if (draftResult?.red?.length == maxTeamSize && draftResult?.blue?.length == maxTeamSize) {
+				isRanked = true
+				room.sendAnnouncement('ranked game')
+			} else {
+				room.sendAnnouncement('non ranked game')
+				isRanked = false
+			}
+		} else {
+			isRanked = false
+			let i = 0
+			ready().forEach(p =>
+											{
+												if (i%2) {
+													room.setPlayerTeam(p.id, 2)
+												} else {
+													room.setPlayerTeam(p.id, 1)
+												}
+												i++
+											})
 		}
-		// move players
-			//draftResult.red, draftResult.blue, draftResult.full
 		room.startGame()
 	}
 
@@ -94,13 +125,6 @@ const initChooser = (room: RoomObject) => {
 		if (duringDraft) {
 			return
 		}
-
-		if (isEnoughPlayers()) {
-			isRanked = true
-			room.sendAnnouncement('ranked game')
-		} else {
-			room.sendAnnouncement('non ranked game')
-		}
 		_onGameStart(byPlayer)
 	}
 
@@ -108,27 +132,29 @@ const initChooser = (room: RoomObject) => {
 	//room.onPlayerLeave
 }
 
-const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: number) => {
+const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSize: number, afkHandler: Function) => {
 			room.stopGame()
+			players.forEach(p => room.setPlayerTeam(p.id, 0))
 			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(draftMap)
-			room.startGame()
 			room.sendAnnouncement('draft starts. pick players')
 			// set blue players kickable (kicking them by red players results in
 			// choose)
-			rd.slice(0,2).forEach(p => {
+			players.slice(0,2).forEach(p => {
 				room.setPlayerTeam(p.id, 1);
 				room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 			})
-			let redPicker = rd[0]
-			let bluePicker = rd[1]
-			rd.slice(2).forEach(p =>
+			room.startGame()
+			let redPicker = players[0]
+			let bluePicker = players[1]
+			players.slice(2).forEach(p =>
 													{ room.setPlayerTeam(p.id, 2)
 													room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 													})
 			room.sendAnnouncement('enter the draft area (25s)')
 			await sleep(25000)
 			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
+
 			const setLock = (p: PlayerObject) => {
 					const props = room.getPlayerDiscProperties(p.id)
 					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
@@ -150,6 +176,13 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 					const props = room.getPlayerDiscProperties(p.id)
 					return props.x > zone.x[0] && props.x < zone.x[1] && props.y > zone.y[0] && props.y < zone.y[1]
 				})
+
+			// what was i thinking below?
+				// i dont need to
+			//players.slice(2).filter(p => playersInZone(midZone).map(pp => pp.id).includes(p.id)).forEach(p => {
+			//	room.setPlayerTeam(p.id, 0)
+			//	afkHandler(p)
+			//})
 			// segment [62] and [63] is middle draft block
 			// segment [64] is left chooser block
 			// segment [65] is right chooser block
@@ -160,49 +193,51 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 			room.sendAnnouncement('p1 picks teammate')
 			let pickingNow = 'red'
 			let totalWait = 0
-			let skippedPicksRed = 0
-			let skippedPicksBlue = 0
 			const pickTimeLimit = 10000 // ms
 			const sleepTime = 100 // ms
 			setUnlock(redPicker)
-			while ((playersInZone(redZone).length != maxTeamSize-1 || playersInZone(blueZone).length != maxTeamSize-1) && playersInZone(midZone).length != 0) {
+			console.log(playersInZone(redZone), playersInZone(blueZone), playersInZone(midZone))
 
-				const setNewPickerRed = () => {
+			let previousMidZoneLength = 0
+			while ( playersInZone(midZone).length != 0) {
+				const setNewPickerRed = async () => {
 					if (room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
 						room.setPlayerTeam(redPicker.id, 0)
+						afkHandler(redPicker)
 					}
 					const midPlayers = playersInZone(midZone)
 					redPicker = midPlayers[0]
 					room.setPlayerTeam(redPicker.id, 1)
-					room.setPlayerDiscProperties(redPicker.id, {x: 120, y: 0})
+					room.setPlayerDiscProperties(redPicker.id, {x: -120, y: 0})
 					if (pickingNow == 'red') {
 						setUnlock(redPicker)
 					} else {
 						setLock(redPicker)
 					}
 					totalWait = 0
-					skippedPicksRed = 0
-					skippedPicksBlue = 0
 				}
 
 				const setNewPickerBlue = () => {
-					if (room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
-						room.setPlayerTeam(redPicker.id, 0)
+					if (room.getPlayerList().map(p => p.id).includes(bluePicker.id)) {
+						room.setPlayerTeam(bluePicker.id, 0)
+						afkHandler(bluePicker)
 					}
 					const midPlayers = playersInZone(midZone)
 					bluePicker = midPlayers[0]
 					room.setPlayerTeam(bluePicker.id, 1)
-					room.setPlayerDiscProperties(redPicker.id, {x: 120, y: 0})
+					room.setPlayerDiscProperties(bluePicker.id, {x: 120, y: 0})
 					if (pickingNow == 'blue') {
 						setUnlock(bluePicker)
 					} else {
 						setLock(bluePicker)
 					}
 					totalWait = 0
-					skippedPicksRed = 0
-					skippedPicksBlue = 0
 				}
 
+				// if teams full
+				if (playersInZone(redZone).length == maxTeamSize-1 && playersInZone(blueZone).length == maxTeamSize-1) {
+					break
+				}
 				// if picker left
 				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
 					room.sendAnnouncement('red picker left. changing red picker')
@@ -213,26 +248,19 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 					setNewPickerBlue()
 				}
 
-
-
-				// if red did not choose 2
-				if (skippedPicksRed == 2) {
-					setNewPickerRed()
-					room.sendAnnouncement('red side skipped pick. changing picker')
-					continue
-				} else if (skippedPicksBlue == 2) {
-					setNewPickerBlue()
-					room.sendAnnouncement('blue side skipped picks. changing picker')
-					continue
-				}
 				totalWait += sleepTime
+
+				// reset wait if player was picked
+				if (playersInZone(midZone).length != previousMidZoneLength) {
+					previousMidZoneLength = playersInZone(midZone).length
+					totalWait = 0
+				}
 				if (pickingNow == 'red') {
 					if (playersInZone(redZone).length >= playersInZone(blueZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							room.sendAnnouncement('timeout')
-							skippedPicksRed += 1
-						} else {
-							skippedPicksRed = 0
+							setNewPickerRed()
+							continue
 						}
 						pickingNow = 'blue'
 						room.sendAnnouncement('p2 picks teammate')
@@ -245,9 +273,8 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 					if (playersInZone(blueZone).length >= playersInZone(redZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							room.sendAnnouncement('timeout')
-							skippedPicksBlue += 1
-						} else {
-							skippedPicksBlue = 0
+							setNewPickerBlue()
+							continue
 						}
 						pickingNow = 'red'
 						room.sendAnnouncement('p1 picks teammate')
@@ -263,6 +290,8 @@ const performDraft = async (room: RoomObject, rd: PlayerObject[], maxTeamSize: n
 					break
 				}
 			}
+			await sleep(100) // wait for last pick to arrive in box
+			console.log('ended while loop when ', playersInZone(redZone), playersInZone(blueZone), playersInZone(midZone))
 			// fill empty spots with other
 			const red = [...playersInZone(redZone), redPicker]
 			const blue = [...playersInZone(blueZone), bluePicker]

@@ -80,7 +80,7 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 			// Collide with Box' joints
 			room.setPlayerDiscProperties(p.id, {cGroup: 268435462})
 			// Move back from the line
-			if (p.position.x > Math.sign(pos.x)*840 && p.position.y > -320 && p.position.y < 320) {
+			if (Math.sign(pos.x)*p.position.x > 840 && p.position.y > -320 && p.position.y < 320) {
 				room.setPlayerDiscProperties(p.id, {x: Math.sign(pos.x)*825});
 			}
 		}

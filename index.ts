@@ -133,7 +133,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(0)
-  room.setScoreLimit(0)
+  room.setScoreLimit(1)
 
   //room.startGame()
   const loop = async () => {
@@ -168,10 +168,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerJoin = async p => {
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true)
-      room.setPlayerTeam(p.id, 1)
-      room.startGame()
-      room.setPlayerAvatar(p.id, "")
+      //room.setPlayerTeam(p.id, 1)
+      //room.startGame()
     }
+    room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
