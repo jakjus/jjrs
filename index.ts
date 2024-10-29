@@ -189,6 +189,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerChat = (p, msg) => {
     const pp = toAug(p)
     if (process.env.DEBUG) {
+      if (msg == 'a') {
+        room.setPlayerDiscProperties(1, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c2 })
+      }
       console.log('paug', pp)
       console.log('props', room.getPlayerDiscProperties(p.id))
       console.log('ball', room.getDiscProperties(0))

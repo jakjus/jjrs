@@ -344,10 +344,10 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 
 export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number, y: number}) => {
 	const pos = { x: Math.sign(fouledAt.x)*penaltyPoint.x, y: penaltyPoint.y }
+	announceCards(game)
 	const oppTeam = forTeam == 1 ? 2 : 1
 	const shooter = room.getPlayerList().filter(p => p.team == forTeam)[0]
-	const gk = room.getPlayerList().filter(p => p.team == oppTeam && toAug(p).cardsAnnounced < 2)[0]
-	announceCards(game)
+	const gk = room.getPlayerList().filter(p => p.team == oppTeam && toAug(p).foulsMeter < 2)[0]
 	console.log(`penalty for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
@@ -355,11 +355,8 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000, xspeed: 0, yspeed: 0})
 	})
-	if (!gk || !shooter) {
-		return
-	}
 	room.pauseGame(true)
-	room.getPlayerList().filter(p => p.team != 0 && p.id != gk.id && p.id != shooter.id).forEach(p => {
+	room.getPlayerList().filter(p => p.team != 0 && p.id != gk?.id && p.id != shooter?.id).forEach(p => {
 		// Collide with Box' joints
 		room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red | room.CollisionFlags.blue | room.CollisionFlags.c0 })
 		// Move back from the line
@@ -367,10 +364,15 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 			room.setPlayerDiscProperties(p.id, {x: Math.sign(pos.x)*825});
 		}
 	})
-	room.setPlayerDiscProperties(shooter.id, { x: pos.x - Math.sign(pos.x)*10, y: pos.y })
-	const defCf = gk.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
-	console.log('mpb', mapBounds.x, pos)
-	room.setPlayerDiscProperties(gk.id, { x: mapBounds.x*Math.sign(pos.x), y: pos.y, cGroup: defCf | room.CollisionFlags.c1  })
+	if (shooter) {
+		room.setPlayerDiscProperties(shooter.id, { x: pos.x - Math.sign(pos.x)*10, y: pos.y })
+	}
+	if (gk) {
+		const defCf = gk.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
+		const toSet = { x: (mapBounds.x+15)*Math.sign(pos.x), y: pos.y, cGroup: defCf | room.CollisionFlags.c2 }
+		console.log('toset', toSet)
+		room.setPlayerDiscProperties(gk.id, toSet)
+	}
 
 	await sleep(100)
 	room.pauseGame(false)

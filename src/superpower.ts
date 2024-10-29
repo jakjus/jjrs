@@ -17,10 +17,12 @@ export const checkAllX = (game: Game) => {
 				if (isPenalty(pp)) {
 					penalty(game, pp.team, pp.fouledAt)
 					pp.activation = 0
+					pp.canCallFoulUntil = 0
 					return
 				}
 				freeKick(game, pp.team, pp.fouledAt)
 				pp.activation = 0
+				pp.canCallFoulUntil = 0
 				return
 			}
 			if (pp.slowdown) {
