@@ -2,6 +2,7 @@ import { room, Game } from '../index';
 import { mapBounds, goals, defaults, colors, secondBallId, thirdBallId } from './settings';
 import { sleep } from './utils'
 import { announceCards } from './foul';
+import { penaltyPoint } from './settings';
 
 
 export const handleBallOutOfBounds = async (game: Game) => {
@@ -338,4 +339,49 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		console.log('setting to '+toMass)
 		room.setDiscProperties(0, { invMass: toMass, color: 0xebf0ce })
 	}
+}
+
+export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number, y: number}) => {
+	const pos = { x: Math.sign(fouledAt.x)*penaltyPoint.x, y: penaltyPoint.y }
+	announceCards(game)
+	console.log(`penalty for ${forTeam}`)
+	room.pauseGame(true)
+	game.eventCounter += 1
+	const savedEventCounter = game.eventCounter
+	throwRealBall(game, forTeam, pos, savedEventCounter)
+	const blockerId = forTeam == 1 ? 2 : 1
+	const notBlockerId = forTeam == 1 ? 1 : 2
+	const defMoveDirection = forTeam == 1 ? 1 : -1
+	room.getPlayerList().filter(p => p.team != 0).forEach(p => room.setPlayerDiscProperties(p.id, { xspeed: 0, yspeed: 0}))
+	room.getPlayerList().filter(p => p.team != forTeam && p.team != 0)
+	.forEach(p => {
+		const props = room.getPlayerDiscProperties(p.id)
+		room.setPlayerDiscProperties(p.id, { x: pos.x + defMoveDirection*(Math.random()*200+50)})
+	})
+
+
+	room.setDiscProperties(blockerId, {...pos, radius: 220 });
+	room.setDiscProperties(notBlockerId, {x: 500, y: 1200});
+	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
+		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
+	})
+	await sleep(100)
+	room.pauseGame(false)
+	game.rotateNextKick = true
+
+	// Blink if not played
+	for (let i=0; i<100; i++) {
+		// Cancel blink if there is another out
+		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
+		const blinkColor = forTeam == 1 ? colors.red : colors.blue
+		if (i > 80) {
+			if (Math.floor(i/3)%2 == 0) {
+				room.setDiscProperties(0, {color: blinkColor})
+			} else {
+				room.setDiscProperties(0, {color: colors.white })
+			}
+		}
+		await sleep(100)
+	}
+	clearCornerBlocks()
 }

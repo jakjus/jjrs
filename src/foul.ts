@@ -1,6 +1,12 @@
 import { Game, room, PlayerAugmented, toAug, players } from "../index"
-import { defaults } from "./settings"
+import { defaults, box, penalty } from "./settings"
 import { sleep } from "./utils"
+
+export const isPenalty = (victim: PlayerAugmented) =>
+	{
+		const ownBoxSide = victim.team == 1 ? -1 : 1
+		return ownBoxSide*victim.fouledAt.x > ownBoxSide*box.x*Math.sign(victim.fouledAt.x) && Math.abs(victim.fouledAt.y) < box.y
+	}
 
 export const checkFoul = async (game: Game) => {
 	const red = room.getPlayerList().filter(p => p.team == 1)
@@ -35,6 +41,9 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	if (ballDist > 300) {
 		cardsFactor += 1  // flagrant foul
 		room.sendAnnouncement('flagrant foul by '+slider.name)
+	}
+	if (isPenalty(victimProps)) {
+		cardsFactor += 1
 	}
 	const power = Math.sqrt((sliderProps.xspeed-victimProps.xspeed)**2+(sliderProps.yspeed-victimProps.yspeed)**2)
 	console.log('power', power)

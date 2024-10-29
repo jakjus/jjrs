@@ -1,8 +1,9 @@
 import { toAug, room, players, PlayerAugmented, Game } from "../index"
-import { freeKick } from "./out"
+import { freeKick, penalty } from "./out"
 import { handleLastTouch } from "./offside"
 import { defaults } from "./settings"
 import { sleep } from "./utils"
+import { isPenalty } from "./foul"
 
 export const checkAllX = (game: Game) => {
 	players.filter(p => p.team != 0)
@@ -13,6 +14,9 @@ export const checkAllX = (game: Game) => {
 			pp.activation++
 			if (new Date().getTime() < pp.canCallFoulUntil && pp.activation > 20) {
 				room.sendAnnouncement('calling foul')
+				if (isPenalty(pp)) {
+					penalty(game, pp.team, pp.fouledAt)
+				}
 				freeKick(game, pp.team, pp.fouledAt)
 				pp.activation = 0
 				return
