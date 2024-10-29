@@ -75,17 +75,22 @@ const initChooser = (room: RoomObject) => {
 		isRunning = true
 	}
 
-	const _onGameStop = room.onGameStop
-	room.onGameStop = async (byPlayer) => {
+	const _onTeamVictory = room.onTeamVictory
+	room.onTeamVictory = async (scores) => {
 		if (duringDraft) {
 			return
 		}
-		_onGameStop(byPlayer)
+		_onTeamVictory(scores)
 		if (isRanked) {
 			room.sendAnnouncement('it was ranked. handling elo.')
 		}
+		const winTeam = scores.red > scores.blue ? 1 : 2
+		const loseTeam = scores.red > scores.blue ? 2 : 1
 		room.sendAnnouncement('5 seconds break')
 		await sleep(5000)
+		room.getPlayerList().filter(p => p.team == winTeam).forEach(p => room.setPlayerTeam(p.id, 0))
+		room.getPlayerList().filter(p => p.team == 0).forEach(p => room.setPlayerTeam(p.id, 0))
+		room.getPlayerList().filter(p => p.team == loseTeam).forEach(p => room.setPlayerTeam(p.id, 0))
 		if (ready().length >= 4) {
 			const rd = ready()
 			duringDraft = true

@@ -28,6 +28,7 @@ export class PlayerAugmented {
   team: 0 | 1 | 2;
   slowdown: number;
   slowdownUntil: number;
+  cooldownUntil: number;
   fouledAt: { x: number, y: number };
   canCallFoulUntil: number;
   afk: boolean;
@@ -43,6 +44,7 @@ export class PlayerAugmented {
     this.sliding = false;
     this.slowdown = 0;
     this.slowdownUntil = 0;
+    this.cooldownUntil = 0;
     this.canCallFoulUntil = 0;
     this.fouledAt = { x: 0, y: 0 };
     this.afk = false;
@@ -176,7 +178,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
       if (found) {
-        newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.cardsAnnounced  })
+        newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter  })
       }
     }
     players.push(newPlayer)
