@@ -1,4 +1,4 @@
-export const mapBounds = { x: 1154, y: 614 }
+export const mapBounds = { x: 1150, y: 610 }
 export const goals = { y: 124 }
 export const box = { x: 840, y: 320 }
 export const penaltyPoint = { x: 935, y: 0 }

@@ -16,6 +16,8 @@ export const checkAllX = (game: Game) => {
 				room.sendAnnouncement('calling foul')
 				if (isPenalty(pp)) {
 					penalty(game, pp.team, pp.fouledAt)
+					pp.activation = 0
+					return
 				}
 				freeKick(game, pp.team, pp.fouledAt)
 				pp.activation = 0

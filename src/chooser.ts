@@ -17,6 +17,9 @@ export const addToGame = (room: RoomObject, p: PlayerObject) => {
 	if (isRanked) {
 		return
 	}
+	if (toAug(p).cardsAnnounced >= 2 || toAug(p).foulsMeter >= 2) {
+		return
+	}
 	if (duringDraft) {
 		room.setPlayerTeam(p.id, 2)
 		return

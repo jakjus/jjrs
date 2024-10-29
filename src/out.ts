@@ -1,4 +1,4 @@
-import { room, Game } from '../index';
+import { room, Game, toAug } from '../index';
 import { mapBounds, goals, defaults, colors, secondBallId, thirdBallId } from './settings';
 import { sleep } from './utils'
 import { announceCards } from './foul';
@@ -41,7 +41,7 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 	console.log(`corner for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
-	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*mapBounds.x, y: (mapBounds.y-2)*Math.sign(pos.y) }, savedEventCounter)
+	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-10), y: (mapBounds.y-10)*Math.sign(pos.y) }, savedEventCounter)
 	const blockerId = forTeam == 1 ? 2 : 1
 	const notBlockerId = forTeam == 1 ? 1 : 2
 	room.setDiscProperties(blockerId, {x: (mapBounds.x+60)*Math.sign(pos.x), y: (mapBounds.y+60)*Math.sign(pos.y), radius: 420 });
@@ -79,7 +79,7 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
 		if (p.team != forTeam) {
 			// Collide with Box' joints
-			room.setPlayerDiscProperties(p.id, {cGroup: 268435462})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red | room.CollisionFlags.blue | room.CollisionFlags.c0 })
 			// Move back from the line
 			if (Math.sign(pos.x)*p.position.x > 840 && p.position.y > -320 && p.position.y < 320) {
 				room.setPlayerDiscProperties(p.id, {x: Math.sign(pos.x)*825});
@@ -140,11 +140,12 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
+		const defCf = p.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
 		if (p.team == forTeam) {
-			room.setPlayerDiscProperties(p.id, {cGroup: 2})
+			room.setPlayerDiscProperties(p.id, {cGroup: defCf})
 		} else {
 			// Collide with Plane
-			room.setPlayerDiscProperties(p.id, {cGroup: 536870918})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red | room.CollisionFlags.blue | room.CollisionFlags.c1 })
 			// Move back from the line
 			if (p.position.y < -460 && pos.y < 0) {
 				room.setPlayerDiscProperties(p.id, {y: -440});
@@ -232,9 +233,9 @@ export const handleBallInPlay = async (game: Game) => {
 export const clearThrowInBlocks = () => {
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		if (p.team == 1) {
-			room.setPlayerDiscProperties(p.id, {cGroup: 2})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red})
 		} else if (p.team == 2) {
-			room.setPlayerDiscProperties(p.id, {cGroup: 4})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.blue})
 		}
 	})
 	room.setDiscProperties(17, {x: -1149});
@@ -251,9 +252,9 @@ export const clearCornerBlocks = () => {
 export const clearGoalKickBlocks = () => {
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
 		if (p.team == 1) {
-			room.setPlayerDiscProperties(p.id, {cGroup: 2})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red })
 		} else if (p.team == 2) {
-			room.setPlayerDiscProperties(p.id, {cGroup: 4})
+			room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.blue })
 		}
 	})
 }
@@ -343,28 +344,34 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 
 export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number, y: number}) => {
 	const pos = { x: Math.sign(fouledAt.x)*penaltyPoint.x, y: penaltyPoint.y }
+	const oppTeam = forTeam == 1 ? 2 : 1
+	const shooter = room.getPlayerList().filter(p => p.team == forTeam)[0]
+	const gk = room.getPlayerList().filter(p => p.team == oppTeam && toAug(p).cardsAnnounced < 2)[0]
 	announceCards(game)
 	console.log(`penalty for ${forTeam}`)
-	room.pauseGame(true)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
 	throwRealBall(game, forTeam, pos, savedEventCounter)
-	const blockerId = forTeam == 1 ? 2 : 1
-	const notBlockerId = forTeam == 1 ? 1 : 2
-	const defMoveDirection = forTeam == 1 ? 1 : -1
-	room.getPlayerList().filter(p => p.team != 0).forEach(p => room.setPlayerDiscProperties(p.id, { xspeed: 0, yspeed: 0}))
-	room.getPlayerList().filter(p => p.team != forTeam && p.team != 0)
-	.forEach(p => {
-		const props = room.getPlayerDiscProperties(p.id)
-		room.setPlayerDiscProperties(p.id, { x: pos.x + defMoveDirection*(Math.random()*200+50)})
-	})
-
-
-	room.setDiscProperties(blockerId, {...pos, radius: 220 });
-	room.setDiscProperties(notBlockerId, {x: 500, y: 1200});
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
-		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
+		room.setPlayerDiscProperties(p.id, {invMass: 1000000, xspeed: 0, yspeed: 0})
 	})
+	if (!gk || !shooter) {
+		return
+	}
+	room.pauseGame(true)
+	room.getPlayerList().filter(p => p.team != 0 && p.id != gk.id && p.id != shooter.id).forEach(p => {
+		// Collide with Box' joints
+		room.setPlayerDiscProperties(p.id, {cGroup: room.CollisionFlags.red | room.CollisionFlags.blue | room.CollisionFlags.c0 })
+		// Move back from the line
+		if (Math.sign(pos.x)*p.position.x > 840 && p.position.y > -320 && p.position.y < 320) {
+			room.setPlayerDiscProperties(p.id, {x: Math.sign(pos.x)*825});
+		}
+	})
+	room.setPlayerDiscProperties(shooter.id, { x: pos.x - Math.sign(pos.x)*10, y: pos.y })
+	const defCf = gk.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
+	console.log('mpb', mapBounds.x, pos)
+	room.setPlayerDiscProperties(gk.id, { x: mapBounds.x*Math.sign(pos.x), y: pos.y, cGroup: defCf | room.CollisionFlags.c1  })
+
 	await sleep(100)
 	room.pauseGame(false)
 	game.rotateNextKick = true
@@ -383,5 +390,5 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 		}
 		await sleep(100)
 	}
-	clearCornerBlocks()
+	clearGoalKickBlocks()
 }

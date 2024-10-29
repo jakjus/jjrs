@@ -1,11 +1,16 @@
 import { Game, room, PlayerAugmented, toAug, players } from "../index"
-import { defaults, box, penalty } from "./settings"
+import { defaults, box, mapBounds } from "./settings"
 import { sleep } from "./utils"
 
 export const isPenalty = (victim: PlayerAugmented) =>
 	{
-		const ownBoxSide = victim.team == 1 ? -1 : 1
-		return ownBoxSide*victim.fouledAt.x > ownBoxSide*box.x*Math.sign(victim.fouledAt.x) && Math.abs(victim.fouledAt.y) < box.y
+		console.log('checking if ispenalty')
+		const positiveX = Math.abs(victim.fouledAt.x)
+		const isYInRange = Math.abs(victim.fouledAt.y) <= box.y
+		const boxSide = victim.team == 1 ? 1 : -1
+		const isInBox = positiveX >= box.x && positiveX <= mapBounds.x && Math.sign(victim.fouledAt.x) === boxSide
+		const result = isYInRange && isInBox
+		return result
 	}
 
 export const checkFoul = async (game: Game) => {
@@ -42,8 +47,9 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 		cardsFactor += 1  // flagrant foul
 		room.sendAnnouncement('flagrant foul by '+slider.name)
 	}
-	if (isPenalty(victimProps)) {
-		cardsFactor += 1
+	victim.fouledAt = { x: victimProps.x, y: victimProps.y }
+	if (isPenalty(victim)) {
+		cardsFactor += 0.3
 	}
 	const power = Math.sqrt((sliderProps.xspeed-victimProps.xspeed)**2+(sliderProps.yspeed-victimProps.yspeed)**2)
 	console.log('power', power)
@@ -53,7 +59,6 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	victim.slowdown = slowdown
 	victim.slowdownUntil = new Date().getTime()+1000*(power*10+power**4*8*Math.random()*Math.random())
 	victim.canCallFoulUntil = new Date().getTime()+4000
-	victim.fouledAt = { x: victimProps.x, y: victimProps.y }
 	room.sendAnnouncement(victim.name+' can call foul by holding X in the next 4 seconds')
 	slider.foulsMeter += power*cardsFactor
 }
