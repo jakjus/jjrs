@@ -25,9 +25,7 @@ export const checkAllX = (game: Game) => {
 				pp.canCallFoulUntil = 0
 				return
 			}
-			if (pp.slowdown || (pp.cooldownUntil < new Date().getTime())) {
-				room.sendAnnouncement(`cooldown ${Math.ceil((new Date().getTime()-pp.cooldownUntil)/1000)}s`, pp.id)
-				pp.activation = 0
+			if (pp.slowdown) {
 				return
 			}
 			if (pp.activation > 20 && pp.activation < 60) {
@@ -42,14 +40,20 @@ export const checkAllX = (game: Game) => {
 			pp.activation = 0
 			room.sendAnnouncement('slide/kick')
 			finKickOrSlide(game, pp)
-			pp.cooldownUntil = new Date().getTime()+5000
 		} else if (pp.activation >= 60 && pp.activation < 100) {
 			pp.activation = 0
+			if (pp.cooldownUntil > new Date().getTime()) {
+				room.sendAnnouncement(`cooldown ${Math.ceil((pp.cooldownUntil-new Date().getTime())/1000)}s`, pp.id)
+				pp.activation = 0
+				room.setPlayerAvatar(pp.id, "🚫")
+				setTimeout(() => room.setPlayerAvatar(pp.id, ""), 200)
+				return
+			}
 			room.sendAnnouncement('sprint')
 			sprint(game, pp)
 			room.setPlayerAvatar(pp.id, '💨')
 			setTimeout(() => room.setPlayerAvatar(pp.id, ""), 700)
-			pp.cooldownUntil = new Date().getTime()+5000
+			pp.cooldownUntil = new Date().getTime()+18000
 		} else {
 			pp.activation = 0
 		}
@@ -92,7 +96,14 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 		room.sendAnnouncement('too far from the ball')
 		return
 	} else if (dist >= slideFromRange) {
+		if (p.cooldownUntil > new Date().getTime()) {
+			room.sendAnnouncement(`cooldown ${Math.ceil((p.cooldownUntil-new Date().getTime())/1000)}s`, p.id)
+			p.activation = 0
+			room.setPlayerAvatar(p.id, "")
+			return
+		}
 		slide(game, p, props)
+		p.cooldownUntil = new Date().getTime()+18000
 		return
 	}
 	if (dist < defaults.ballRadius+defaults.playerRadius+1) {

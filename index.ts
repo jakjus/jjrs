@@ -126,7 +126,7 @@ export let game: Game | null;
 
 process.stdin.on("data", d => {
   const r = room
-  const result = eval(d.toString()).catch((d: string) => console.error(d))
+  const result = eval(d.toString())
   console.log(result)
 })
 
@@ -136,26 +136,32 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(0)
   room.setScoreLimit(1)
+  room.startGame()
 
   //room.startGame()
-  const loop = async () => {
-    if (!game || !room.getScores()) {
-      setTimeout(loop, 1000/60)
-      return
-    }
+  //const loop = async () => {
+  //  if (!game || !room.getScores()) {
+  //    setTimeout(loop, 1000/60)
+  //    return
+  //  }
+  //  if (game.inPlay) {
+  //    game.handleBallOutOfBounds()
+  //  } else {
+  //    game.handleBallInPlay()
+  //  }
+  //  setTimeout(loop, 1000/60)
+  //}
+
+  //loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
+
+  let i = 0;
+  room.onGameTick = () => {
+    if (!game) { return }
     if (game.inPlay) {
       game.handleBallOutOfBounds()
     } else {
       game.handleBallInPlay()
     }
-    setTimeout(loop, 1000/60)
-  }
-
-  loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
-
-  let i = 0;
-  room.onGameTick = () => {
-    if (!game) { return }
     game.handleBallTouch()
     game.checkAllX()
     game.rotateBall()
@@ -171,7 +177,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true)
       //room.setPlayerTeam(p.id, 1)
-      //room.startGame()
     }
     room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
@@ -192,7 +197,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     const pp = toAug(p)
     if (process.env.DEBUG) {
       if (msg == 'a') {
-        room.setPlayerDiscProperties(1, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c2 })
+        room.setPlayerDiscProperties(p.id, {x: -10})
       }
       console.log('paug', pp)
       console.log('props', room.getPlayerDiscProperties(p.id))

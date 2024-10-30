@@ -4,6 +4,21 @@ import { sleep } from './utils'
 import { announceCards } from './foul';
 import { penaltyPoint } from './settings';
 
+const blink = async (game: Game, savedEventCounter: number, forTeam: TeamID) => {
+	for (let i=0; i<150; i++) {
+		// Cancel blink if there is another out
+		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return true }
+		const blinkColor = forTeam == 1 ? colors.red : colors.blue
+		if (i > 130) {
+			if (Math.floor(i/3)%2 == 0) {
+				room.setDiscProperties(0, {color: blinkColor})
+			} else {
+				room.setDiscProperties(0, {color: colors.white })
+			}
+		}
+		await sleep(100)
+	}
+}
 
 export const handleBallOutOfBounds = async (game: Game) => {
 	if (!game.inPlay) { return }
@@ -31,6 +46,7 @@ export const handleBallOutOfBounds = async (game: Game) => {
 	// UPPER and LOWER BORDER
 	//if (Math.abs(ball.x) > mapBounds.x && Math.abs(ball.y) > goals.y) {
 	else if (Math.abs(ball.y) > mapBounds.y && Math.abs(ball.x) < mapBounds.x) {
+		console.log('ball is out', ball)
 		throwFakeBall(ball)
 		throwIn(game, lastTouchTeamId == 1 ? 2 : 1, ball)
 	}
@@ -41,7 +57,7 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 	console.log(`corner for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
-	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-10), y: (mapBounds.y-10)*Math.sign(pos.y) }, savedEventCounter)
+	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-10), y: (mapBounds.y-20)*Math.sign(pos.y) }, savedEventCounter)
 	const blockerId = forTeam == 1 ? 2 : 1
 	const notBlockerId = forTeam == 1 ? 1 : 2
 	room.setDiscProperties(blockerId, {x: (mapBounds.x+60)*Math.sign(pos.x), y: (mapBounds.y+60)*Math.sign(pos.y), radius: 420 });
@@ -51,21 +67,9 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 	})
 
 	game.rotateNextKick = true
+	const r = await blink(game, savedEventCounter, forTeam)
+	if (r) {return}
 
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
 	clearCornerBlocks()
 }
 
@@ -89,29 +93,19 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 
 	game.rotateNextKick = true
 
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
+	const r = await blink(game, savedEventCounter, forTeam)
+	if (r) {return}
+
 	clearGoalKickBlocks()
 }
 
 const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
+	console.log('throwin')
 	game.eventCounter += 1
 	game.skipOffsideCheck = true
 	const savedEventCounter = game.eventCounter
-	throwRealBall(game, forTeam, { x: pos.x, y: Math.sign(pos.y)*mapBounds.y }, savedEventCounter)
+	throwRealBall(game, forTeam, { x: pos.x, y: Math.sign(pos.y)*(mapBounds.y) }, savedEventCounter)
 	if (forTeam == 1) {
 		if (pos.y < 0) {
 			// show top red line
@@ -155,21 +149,9 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 		}
 	})
 
+	const r = await blink(game, savedEventCounter, forTeam)
+	if (r) {return}
 
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
 	const newForTeam = forTeam == 1 ? 2 : 1
 	throwIn(game, newForTeam, pos)
 }
@@ -200,20 +182,9 @@ export const freeKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: 
 	room.pauseGame(false)
 	game.rotateNextKick = true
 
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
+	const r = await blink(game, savedEventCounter, forTeam)
+	if (r) {return}
+
 	clearCornerBlocks()
 }
 
@@ -221,6 +192,7 @@ export const handleBallInPlay = async (game: Game) => {
 	const props = room.getDiscProperties(0)
 	if (game.animation) {return}
 	if (Math.abs(props.xspeed) > 0.1 || Math.abs(props.yspeed) > 0.1) {
+		console.log('yes inplay')
 		game.inPlay = true
 		room.getPlayerList().forEach(p => room.setPlayerDiscProperties(p.id, { invMass: defaults.invMass }))
 		room.setDiscProperties(0, { color: colors.white })
@@ -331,14 +303,17 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 
 	// Hide fake ball and replace with real ball
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
-	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.4 : defaults.ballInvMass
+	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.45 : defaults.ballInvMass
 	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass })
 	// allow fast pass during first second, then set mass for long pass
 	game.animation = false
-	await sleep(1000)
+	await sleep(2000)
 	if (evCounter == game.eventCounter) {
 		console.log('setting to '+toMass)
-		room.setDiscProperties(0, { invMass: toMass, color: 0xebf0ce })
+		room.setDiscProperties(0, { invMass: toMass })
+		if (toMass != defaults.ballInvMass) {
+			room.setDiscProperties(0, { color: 0xbccc9b })
+		}
 	}
 }
 
@@ -378,19 +353,7 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 	room.pauseGame(false)
 	game.rotateNextKick = true
 
-	// Blink if not played
-	for (let i=0; i<100; i++) {
-		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return }
-		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 80) {
-			if (Math.floor(i/3)%2 == 0) {
-				room.setDiscProperties(0, {color: blinkColor})
-			} else {
-				room.setDiscProperties(0, {color: colors.white })
-			}
-		}
-		await sleep(100)
-	}
+	const r = await blink(game, savedEventCounter, forTeam)
+	if (r) {return}
 	clearGoalKickBlocks()
 }

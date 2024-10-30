@@ -80,21 +80,21 @@ const initChooser = (room: RoomObject) => {
 		if (duringDraft) {
 			return
 		}
-		_onTeamVictory(scores)
+		if (_onTeamVictory) {
+			_onTeamVictory(scores)
+		}
 		if (isRanked) {
 			room.sendAnnouncement('it was ranked. handling elo.')
 		}
 		const winTeam = scores.red > scores.blue ? 1 : 2
 		const loseTeam = scores.red > scores.blue ? 2 : 1
-		room.sendAnnouncement('5 seconds break')
-		await sleep(5000)
-		room.getPlayerList().filter(p => p.team == winTeam).forEach(p => room.setPlayerTeam(p.id, 0))
-		room.getPlayerList().filter(p => p.team == 0).forEach(p => room.setPlayerTeam(p.id, 0))
-		room.getPlayerList().filter(p => p.team == loseTeam).forEach(p => room.setPlayerTeam(p.id, 0))
+		room.sendAnnouncement('15 seconds break')
+		await sleep(15000)
+		const winnerIds = room.getPlayerList().filter(p => p.team == winTeam).map(p => p.id)
 		if (ready().length >= 4) {
 			const rd = ready()
 			duringDraft = true
-			const draftResult = await performDraft(room, rd, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
+			const draftResult = await performDraft(room, rd, winnerIds, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
 			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)
 			duringDraft = false
@@ -140,9 +140,17 @@ const initChooser = (room: RoomObject) => {
 	//room.onPlayerLeave
 }
 
-const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSize: number, afkHandler: Function) => {
+const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds: number[], maxTeamSize: number, afkHandler: Function) => {
 			room.stopGame()
 			players.forEach(p => room.setPlayerTeam(p.id, 0))
+			console.log('players before', players)
+			if (pickerIds) {
+				players.forEach((p, i) => {
+					if (pickerIds.includes(p.id)){
+						players.unshift(players.splice(i, 1)[0])
+					}
+				})
+			}
 			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(draftMap)
 			room.sendAnnouncement('draft starts. pick players')
@@ -166,8 +174,8 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSi
 			const setLock = (p: PlayerObject) => {
 					const props = room.getPlayerDiscProperties(p.id)
 					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
-					if (Math.abs(props.x) <= 48) {
-						room.setPlayerDiscProperties(p.id, {x: Math.sign(props.x)*63})
+					if (Math.abs(props.x) <= 55) {
+						room.setPlayerDiscProperties(p.id, {x: Math.sign(props.x)*70})
 					}
 			}
 
@@ -185,12 +193,6 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSi
 					return props.x > zone.x[0] && props.x < zone.x[1] && props.y > zone.y[0] && props.y < zone.y[1]
 				})
 
-			// what was i thinking below?
-				// i dont need to
-			//players.slice(2).filter(p => playersInZone(midZone).map(pp => pp.id).includes(p.id)).forEach(p => {
-			//	room.setPlayerTeam(p.id, 0)
-			//	afkHandler(p)
-			//})
 			// segment [62] and [63] is middle draft block
 			// segment [64] is left chooser block
 			// segment [65] is right chooser block
@@ -201,10 +203,9 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSi
 			room.sendAnnouncement('p1 picks teammate')
 			let pickingNow = 'red'
 			let totalWait = 0
-			const pickTimeLimit = 10000 // ms
+			const pickTimeLimit = 15000 // ms
 			const sleepTime = 100 // ms
 			setUnlock(redPicker)
-			console.log(playersInZone(redZone), playersInZone(blueZone), playersInZone(midZone))
 
 			let previousMidZoneLength = 0
 			while ( playersInZone(midZone).length != 0) {
@@ -303,6 +304,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSi
 			// fill empty spots with other
 			const red = [...playersInZone(redZone), redPicker]
 			const blue = [...playersInZone(blueZone), bluePicker]
+			room.getPlayerList().filter(p => ![...red, ...blue].map(pp => pp.id).includes(p.id)).forEach(p => afkHandler(p))
 			room.stopGame()
 			room.sendAnnouncement('finished')
 			console.log('draft result: ', { red, blue })

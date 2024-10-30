@@ -42,7 +42,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	const victimProps = room.getPlayerDiscProperties(victim.id)
 	const ballPos = room.getBallPosition()
 	const ballDist = Math.sqrt((slider.position.x-ballPos.x)**2+(slider.position.y-ballPos.y)**2)
-	let cardsFactor = 1
+	let cardsFactor = 0.7
 	if (ballDist > 300) {
 		cardsFactor += 1  // flagrant foul
 		room.sendAnnouncement('flagrant foul by '+slider.name)
@@ -60,7 +60,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	victim.slowdownUntil = new Date().getTime()+1000*(power*8+power**4*8*Math.random()*Math.random())
 	victim.canCallFoulUntil = new Date().getTime()+4000
 	room.sendAnnouncement(victim.name+' can call foul by holding X in the next 4 seconds')
-	slider.foulsMeter += power*cardsFactor
+	slider.foulsMeter += power*cardsFactor*(Math.random()*0.2+0.9)
 }
 
 export const announceCards = (game: Game) => {
