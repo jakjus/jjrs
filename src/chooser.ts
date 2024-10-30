@@ -14,7 +14,7 @@ const both = () => room.getPlayerList().filter(p => p.team == 1 || p.team == 2)
 const ready = () => room.getPlayerList().filter(p => !toAug(p).afk)
 
 export const addToGame = (room: RoomObject, p: PlayerObject) => {
-	if (isRanked) {
+	if (isRanked && [...red(), ...blue()].length <= maxTeamSize*2) {
 		return
 	}
 	if (toAug(p).cardsAnnounced >= 2 || toAug(p).foulsMeter >= 2) {
@@ -24,8 +24,6 @@ export const addToGame = (room: RoomObject, p: PlayerObject) => {
 		room.setPlayerTeam(p.id, 2)
 		return
 	}
-	const red = () => room.getPlayerList().filter(p => p.team == 1)
-	const blue = () => room.getPlayerList().filter(p => p.team == 2)
 	if (red().length > blue().length) {
 		room.setPlayerTeam(p.id, 2)
 	} else {
