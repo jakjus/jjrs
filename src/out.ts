@@ -5,12 +5,14 @@ import { announceCards } from './foul';
 import { penaltyPoint } from './settings';
 
 const blink = async (game: Game, savedEventCounter: number, forTeam: TeamID) => {
-	for (let i=0; i<150; i++) {
+	for (let i=0; i<140; i++) {
 		// Cancel blink if there is another out
-		if (game.inPlay || (savedEventCounter != game.eventCounter)) { return true }
+		if (game.inPlay || (savedEventCounter != game.eventCounter)) {
+			room.setDiscProperties(0, {color: colors.white})
+			return true }
 		const blinkColor = forTeam == 1 ? colors.red : colors.blue
-		if (i > 130) {
-			if (Math.floor(i/3)%2 == 0) {
+		if (i > 115) {
+			if (Math.floor(i/2)%2 == 0) {
 				room.setDiscProperties(0, {color: blinkColor})
 			} else {
 				room.setDiscProperties(0, {color: colors.white })
@@ -18,6 +20,7 @@ const blink = async (game: Game, savedEventCounter: number, forTeam: TeamID) => 
 		}
 		await sleep(100)
 	}
+	room.setDiscProperties(0, {color: colors.white})
 }
 
 export const handleBallOutOfBounds = async (game: Game) => {
@@ -233,7 +236,7 @@ export const clearGoalKickBlocks = () => {
 
 const throwFakeBall = async (ball: DiscPropertiesObject) => {
 		let oldRadius = ball.radius
-		room.setDiscProperties(secondBallId, { x: ball.x, y: ball.y, xspeed: ball.xspeed, yspeed: ball.yspeed, radius: oldRadius })
+		room.setDiscProperties(secondBallId, { x: ball.x+ball.xspeed, y: ball.y+ball.yspeed, xspeed: ball.xspeed, yspeed: ball.yspeed, radius: oldRadius })
 		for (let i=0; i<100; i++) {
 			room.setDiscProperties(secondBallId, { radius: oldRadius })
 			if (i>40) {
@@ -312,7 +315,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		console.log('setting to '+toMass)
 		room.setDiscProperties(0, { invMass: toMass })
 		if (toMass != defaults.ballInvMass) {
-			room.setDiscProperties(0, { color: 0xbccc9b })
+			room.setDiscProperties(0, { color: colors.powerball })
 		}
 	}
 }

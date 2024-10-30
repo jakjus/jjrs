@@ -25,7 +25,8 @@ export const checkAllX = (game: Game) => {
 				pp.canCallFoulUntil = 0
 				return
 			}
-			if (pp.slowdown) {
+			if (pp.slowdown && (new Date().getTime() > pp.canCallFoulUntil)) {
+				pp.activation = 0
 				return
 			}
 			if (pp.activation > 20 && pp.activation < 60) {

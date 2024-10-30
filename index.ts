@@ -36,10 +36,10 @@ export class PlayerAugmented {
     this.id = p.id;
     this.name = p.name;
     this.auth = p.auth;
-    this.foulsMeter = p.foulsMeter || 0;
-    this.cardsAnnounced = p.cardsAnnounced || 0;
     this.conn = p.conn;
     this.team = p.team;
+    this.foulsMeter = p.foulsMeter || 0;
+    this.cardsAnnounced = p.cardsAnnounced || 0;
     this.activation = 0;
     this.sliding = false;
     this.slowdown = 0;
@@ -183,7 +183,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
       if (found) {
-        newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter  })
+        newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
       }
     }
     players.push(newPlayer)
@@ -216,6 +216,17 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onGameStart = _ => {
     game = new Game()
+    players.forEach(p => {
+      p.slowdownUntil = 0
+      p.foulsMeter = p.foulsMeter || 0;
+      p.cardsAnnounced = p.cardsAnnounced || 0;
+      p.activation = 0;
+      p.sliding = false;
+      p.slowdown = 0;
+      p.slowdownUntil = 0;
+      p.cooldownUntil = 0;
+      p.canCallFoulUntil = 0;
+    })
     clearThrowInBlocks()
     room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
   }

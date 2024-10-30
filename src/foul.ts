@@ -57,7 +57,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	const av = power > 2.6 ? '❌' : '🩹'
 	room.setPlayerAvatar(victim.id, av)
 	victim.slowdown = slowdown
-	victim.slowdownUntil = new Date().getTime()+1000*(power*8+power**4*8*Math.random()*Math.random())
+	victim.slowdownUntil = new Date().getTime()+1000*(0.1*power**8*(0.5+0.5*Math.random()*Math.random()))
 	victim.canCallFoulUntil = new Date().getTime()+4000
 	room.sendAnnouncement(victim.name+' can call foul by holding X in the next 4 seconds')
 	slider.foulsMeter += power*cardsFactor*(Math.random()*0.2+0.9)
