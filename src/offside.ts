@@ -1,5 +1,6 @@
 import { Game, room } from "../index"
 import { PlayerAugmented } from "../index"
+import { sendMessage } from "./message"
 import { sleep } from "./utils"
 import { offsideDiscs, mapBounds, defaults } from "./settings"
 import { freeKick } from "./out"
@@ -32,7 +33,6 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	if (!receiverDuringPass) { return }
 	const atkDirection = p.team == 1 ? 1 : -1
 	if (atkDirection*receiverDuringPass.position.x < 0) {
-		room.sendAnnouncement('own half')
 		return  // receiver in his starting half during pass
 	}
 	const receiverPosNow = room.getPlayerDiscProperties(p.id)
@@ -41,23 +41,20 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	const defenders = enemies
 		.filter(pp => atkDirection*pp.position.x > atkDirection*receiverDuringPass.position.x)
 	if (enemies.length < 1) {
-		room.sendAnnouncement('not enough players in enemy team')
 		return
 	}
 	if (defenders.length > 1) {
-		room.sendAnnouncement('didnt cross last defenders offside line')
 		return  // there was a defender
 	}
 	if (!game.inPlay) { return }
 	if (atkDirection*receiverDuringPass.position.x < atkDirection*lt.x) {
-		room.sendAnnouncement('ball was in front of receiver during pass')
 		return
 	}
 
 	// its offside
 	game.inPlay = false
 	game.eventCounter += 1
-	room.sendAnnouncement('offside')
+	sendMessage('Offside.')
 	const osPlace = receiverDuringPass.position
 	const allPosNow = room.getPlayerList().filter(p => p.team != 0)
 	const ballNow = room.getBallPosition()

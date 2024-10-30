@@ -124,11 +124,11 @@ export let db: any;
 export let room: RoomObject;
 export let game: Game | null;
 
-process.stdin.on("data", d => {
-  const r = room
-  const result = eval(d.toString())
-  console.log(result)
-})
+//process.stdin.on("data", d => {
+//  const r = room
+//  const result = eval(d.toString())
+//  console.log(result)
+//})
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args)
@@ -250,7 +250,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onPlayerBallKick = p => {
-    room.sendAnnouncement('ballkick')
     if (game) {
       const pp = toAug(p)
       if (game.rotateNextKick) {

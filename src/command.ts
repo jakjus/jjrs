@@ -11,7 +11,7 @@ export const handleCommand = (p: PlayerAugmented, msg: string) => {
     if (commands[commandName]) {
         commands[commandName](p, commandArgs)
     } else {
-        sendMessage(p, "Command not found.")
+        sendMessage("Command not found.", p)
     }
 }
 
@@ -28,28 +28,27 @@ const commands: { [key: string]: commandFunc } = {
 const setAfk = (p: PlayerAugmented) => {
     p.afk = true
     room.setPlayerTeam(p.id, 0)
-    room.sendAnnouncement('youre afk', p.id)
+    sendMessage('You are now AFK.', p)
 }
 
 const setBack = (p: PlayerAugmented) => {
     if (!p.afk) {
-        room.sendAnnouncement('you are already not afk', p.id)
+        sendMessage('You are ALREADY back.', p)
         return
     }
     p.afk = false
-    console.log('after setback', p)
     addToGame(room, room.getPlayer(p.id))
-    room.sendAnnouncement('youre back from afk', p.id)
+    sendMessage('You are BACK.', p)
 }
 
 const showHelp = (p: PlayerAugmented) => {
-    sendMessage(p, `${config.roomName}. Commands: ${Object.keys(commands)
+    sendMessage(`${config.roomName}. Commands: ${Object.keys(commands)
                     .map(k => "!"+k)
-                    .join(", ")}`)
+                    .join(", ")}`, p)
 }
 
 const showDiscord = (p: PlayerAugmented) => {
-    sendMessage(null, `HaxClimb Global Discord: discord.gg/ZaarExwMjf`)
+    sendMessage(`-`, p)
 }
 
 const bb = (p: PlayerAugmented) => {

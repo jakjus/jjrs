@@ -1,4 +1,5 @@
 import { toAug, room, players, PlayerAugmented, Game } from "../index"
+import { sendMessage } from "./message"
 import { freeKick, penalty } from "./out"
 import { handleLastTouch } from "./offside"
 import { defaults } from "./settings"
@@ -13,7 +14,7 @@ export const checkAllX = (game: Game) => {
 		if (props.damping == 0.959) {
 			pp.activation++
 			if (new Date().getTime() < pp.canCallFoulUntil && pp.activation > 20) {
-				room.sendAnnouncement('calling foul')
+				sendMessage(`${pp.name} has called foul.`)
 				if (isPenalty(pp)) {
 					penalty(game, pp.team, pp.fouledAt)
 					pp.activation = 0
@@ -39,18 +40,16 @@ export const checkAllX = (game: Game) => {
 		// When X is RELEASED
 		} else if (pp.activation > 20 && pp.activation < 60) {
 			pp.activation = 0
-			room.sendAnnouncement('slide/kick')
 			finKickOrSlide(game, pp)
 		} else if (pp.activation >= 60 && pp.activation < 100) {
 			pp.activation = 0
 			if (pp.cooldownUntil > new Date().getTime()) {
-				room.sendAnnouncement(`cooldown ${Math.ceil((pp.cooldownUntil-new Date().getTime())/1000)}s`, pp.id)
+				sendMessage(`Cooldown: ${Math.ceil((pp.cooldownUntil-new Date().getTime())/1000)}s.`, pp)
 				pp.activation = 0
 				room.setPlayerAvatar(pp.id, "🚫")
 				setTimeout(() => room.setPlayerAvatar(pp.id, ""), 200)
 				return
 			}
-			room.sendAnnouncement('sprint')
 			sprint(game, pp)
 			room.setPlayerAvatar(pp.id, '💨')
 			setTimeout(() => room.setPlayerAvatar(pp.id, ""), 700)
@@ -73,14 +72,14 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
 
 const slide = async (game: Game, p: PlayerAugmented, props: DiscPropertiesObject) => {
 	room.setPlayerDiscProperties(p.id, {
-			xspeed: props.xspeed * 3.1, yspeed: props.yspeed * 3.1, xgravity: -props.xspeed * 0.026, ygravity: -props.yspeed * 0.026,
+			xspeed: props.xspeed * 3.2, yspeed: props.yspeed * 3.2, xgravity: -props.xspeed * 0.026, ygravity: -props.yspeed * 0.026,
 	});
 	room.setPlayerAvatar(p.id, '👟');
 	p.sliding = true;
 	await sleep(700);
 	p.sliding = false;
 	p.slowdown = 0.13
-	p.slowdownUntil = new Date().getTime()+1000*3.4
+	p.slowdownUntil = new Date().getTime()+1000*3.2
 	room.setPlayerAvatar(p.id, "");
 }
 
@@ -94,11 +93,11 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 	const slideFromRange = 56
 	setTimeout(() => room.setPlayerAvatar(p.id, ""), 700)
 	if (dist > activationRange && dist < slideFromRange) {
-		room.sendAnnouncement('too far from the ball')
+		sendMessage('Too close to the ball to slide, too far to finesse kick.', p)
 		return
 	} else if (dist >= slideFromRange) {
 		if (p.cooldownUntil > new Date().getTime()) {
-			room.sendAnnouncement(`cooldown ${Math.ceil((p.cooldownUntil-new Date().getTime())/1000)}s`, p.id)
+			sendMessage(`Cooldown: ${Math.ceil((p.cooldownUntil-new Date().getTime())/1000)}s`, p)
 			p.activation = 0
 			room.setPlayerAvatar(p.id, "")
 			return
@@ -108,7 +107,7 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 		return
 	}
 	if (dist < defaults.ballRadius+defaults.playerRadius+1) {
-		room.sendAnnouncement('too close to the ball')
+		sendMessage('Too close to the ball.', p)
 		return
 	}
 	room.setPlayerAvatar(p.id, "🎯");

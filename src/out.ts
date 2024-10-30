@@ -49,7 +49,6 @@ export const handleBallOutOfBounds = async (game: Game) => {
 	// UPPER and LOWER BORDER
 	//if (Math.abs(ball.x) > mapBounds.x && Math.abs(ball.y) > goals.y) {
 	else if (Math.abs(ball.y) > mapBounds.y && Math.abs(ball.x) < mapBounds.x) {
-		console.log('ball is out', ball)
 		throwFakeBall(ball)
 		throwIn(game, lastTouchTeamId == 1 ? 2 : 1, ball)
 	}
@@ -57,7 +56,6 @@ export const handleBallOutOfBounds = async (game: Game) => {
 
 const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
-	console.log(`corner for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
 	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-10), y: (mapBounds.y-20)*Math.sign(pos.y) }, savedEventCounter)
@@ -78,7 +76,6 @@ const cornerKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: numbe
 
 const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
-	console.log(`goalkick for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
 	throwRealBall(game, forTeam, { x: Math.sign(pos.x)*(mapBounds.x-80), y: 0}, savedEventCounter)
@@ -104,7 +101,6 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 
 const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
-	console.log('throwin')
 	game.eventCounter += 1
 	game.skipOffsideCheck = true
 	const savedEventCounter = game.eventCounter
@@ -161,7 +157,6 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 
 export const freeKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
-	console.log(`freekick for ${forTeam}`)
 	room.pauseGame(true)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
@@ -195,7 +190,6 @@ export const handleBallInPlay = async (game: Game) => {
 	const props = room.getDiscProperties(0)
 	if (game.animation) {return}
 	if (Math.abs(props.xspeed) > 0.1 || Math.abs(props.yspeed) > 0.1) {
-		console.log('yes inplay')
 		game.inPlay = true
 		room.getPlayerList().forEach(p => room.setPlayerDiscProperties(p.id, { invMass: defaults.invMass }))
 		room.setDiscProperties(0, { color: colors.white })
@@ -312,7 +306,6 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	game.animation = false
 	await sleep(2000)
 	if (evCounter == game.eventCounter) {
-		console.log('setting to '+toMass)
 		room.setDiscProperties(0, { invMass: toMass })
 		if (toMass != defaults.ballInvMass) {
 			room.setDiscProperties(0, { color: colors.powerball })
@@ -326,7 +319,6 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 	const oppTeam = forTeam == 1 ? 2 : 1
 	const shooter = room.getPlayerList().filter(p => p.team == forTeam)[0]
 	const gk = room.getPlayerList().filter(p => p.team == oppTeam && toAug(p).foulsMeter < 2)[0]
-	console.log(`penalty for ${forTeam}`)
 	game.eventCounter += 1
 	const savedEventCounter = game.eventCounter
 	throwRealBall(game, forTeam, pos, savedEventCounter)
@@ -348,7 +340,6 @@ export const penalty = async (game: Game, forTeam: TeamID, fouledAt: {x: number,
 	if (gk) {
 		const defCf = gk.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
 		const toSet = { x: (mapBounds.x+15)*Math.sign(pos.x), y: pos.y, cGroup: defCf | room.CollisionFlags.c2 }
-		console.log('toset', toSet)
 		room.setPlayerDiscProperties(gk.id, toSet)
 	}
 
