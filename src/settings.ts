@@ -7,3 +7,4 @@ export const colors = { white: 0xffffff, red: 0xe07d6e, blue: 0x6e9ee0, powerbal
 export const secondBallId = 24
 export const thirdBallId = 25
 export const offsideDiscs = { red: [26, 27], blue: [28, 29] }
+export const maxTeamSize = 6

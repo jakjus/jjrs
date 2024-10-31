@@ -3,11 +3,11 @@ import { sendMessage } from "./message";
 import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
+import { maxTeamSize } from "./settings";
 
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 let duringDraft: boolean = false;
-const maxTeamSize = 3
 const red = () => room.getPlayerList().filter(p => p.team == 1)
 const blue = () => room.getPlayerList().filter(p => p.team == 2)
 const spec = () => room.getPlayerList().filter(p => p.team == 0)
