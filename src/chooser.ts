@@ -1,10 +1,12 @@
 import { room } from "..";
 import { sendMessage } from "./message";
+import { game } from "..";
 import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
-import { maxTeamSize } from "./settings";
+import { teamSize } from "./settings";
 
+const maxTeamSize = process.env.DEBUG ? 2 : teamSize
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 let duringDraft: boolean = false;
@@ -15,14 +17,13 @@ const both = () => room.getPlayerList().filter(p => p.team == 1 || p.team == 2)
 const ready = () => room.getPlayerList().filter(p => !toAug(p).afk)
 
 export const addToGame = (room: RoomObject, p: PlayerObject) => {
-	if (isRanked && [...red(), ...blue()].length <= maxTeamSize*2) {
+	if (game && isRanked && [...red(), ...blue()].length <= maxTeamSize*2) {
 		return
 	}
-	if (toAug(p).cardsAnnounced >= 2 || toAug(p).foulsMeter >= 2) {
+	if (game && (toAug(p).cardsAnnounced >= 2 || toAug(p).foulsMeter >= 2)) {
 		return
 	}
 	if (duringDraft) {
-		room.setPlayerTeam(p.id, 2)
 		return
 	}
 	if (red().length > blue().length) {
@@ -59,8 +60,10 @@ const initChooser = (room: RoomObject) => {
 	const _onPlayerLeave = room.onPlayerLeave
 	room.onPlayerLeave = p => {
 		if (!isEnoughPlayers()) {
+			if (isRanked) {
+				sendMessage('Not enough players. Unranked game.')
+			}
 			isRanked = false
-			sendMessage('Unranked game.')
 			refill()
 			balanceTeams()
 		}
@@ -84,8 +87,8 @@ const initChooser = (room: RoomObject) => {
 		}
 		const winTeam = scores.red > scores.blue ? 1 : 2
 		const loseTeam = scores.red > scores.blue ? 2 : 1
-		sendMessage('Break time: 15 seconds.')
-		await sleep(15000)
+		sendMessage('Break time: 10 seconds.')
+		await sleep(10000)
 		const winnerIds = room.getPlayerList().filter(p => p.team == winTeam).map(p => p.id)
 		if (ready().length >= 4) {
 			const rd = ready()
@@ -163,7 +166,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 													{ room.setPlayerTeam(p.id, 2)
 													room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 													})
-			sendMessage('enter the draft area (25s)')
+			sendMessage('BLUE enter the draft area (25s).')
 			await sleep(25000)
 			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
 
@@ -196,11 +199,11 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 			// spawn: x: -150, y: 150
 			// x: 25
 
-			sendMessage('Red captain picks teammate...')
+			sendMessage(redPicker.name+' picks teammate...')
 			sendMessage('PICK YOUR TEAMMATE by KICKING him!', redPicker)
 			let pickingNow = 'red'
 			let totalWait = 0
-			const pickTimeLimit = 15000 // ms
+			const pickTimeLimit = 20000 // ms
 			const sleepTime = 100 // ms
 			setUnlock(redPicker)
 
@@ -246,11 +249,11 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 				}
 				// if picker left
 				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
-					sendMessage('red picker left. changing red picker')
+					sendMessage('Red picker left. Changing red picker...')
 					setNewPickerRed()
 				}
 				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
-					sendMessage('blue picker left. changing blue picker')
+					sendMessage('Blue picker left. Changing blue picker...')
 					setNewPickerBlue()
 				}
 
@@ -269,7 +272,8 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 							continue
 						}
 						pickingNow = 'blue'
-						sendMessage('p2 picks teammate')
+						sendMessage(bluePicker.name+' picks teammate...')
+						sendMessage('Pick 2 players by KICKING them.', bluePicker);
 						setUnlock(bluePicker)
 						setLock(redPicker)
 						totalWait = 0
@@ -278,13 +282,13 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 				} else {
 					if (playersInZone(blueZone).length >= playersInZone(redZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
-							sendMessage('timeout')
+							sendMessage('Timeout. Changing blue picker...')
 							setNewPickerBlue()
 							continue
 						}
 						pickingNow = 'red'
 						sendMessage('Red captain picks teammate...')
-						sendMessage('PICK YOUR TEAMMATE by KICKING him!', redPicker)
+						sendMessage('Pick 2 players by KICKING them!', redPicker)
 						setUnlock(redPicker)
 						setLock(bluePicker)
 						totalWait = 0

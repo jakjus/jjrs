@@ -152,6 +152,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(5)
   room.setScoreLimit(0)
+  if (process.env.DEBUG) {
+    room.setScoreLimit(1)
+  }
   room.startGame()
 
   //room.startGame()
@@ -175,12 +178,12 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (!game) { return }
     if (game.inPlay) {
       game.handleBallOutOfBounds()
+      game.rotateBall()
     } else {
       game.handleBallInPlay()
     }
     game.handleBallTouch()
     game.checkAllX()
-    game.rotateBall()
     game.checkFoul()
     i++;
     if (i > 6) {
