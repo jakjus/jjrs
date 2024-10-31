@@ -99,7 +99,8 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 		if (p.cooldownUntil > new Date().getTime()) {
 			sendMessage(`Cooldown: ${Math.ceil((p.cooldownUntil-new Date().getTime())/1000)}s`, p)
 			p.activation = 0
-			room.setPlayerAvatar(p.id, "")
+			room.setPlayerAvatar(p.id, "🚫")
+			setTimeout(() => room.setPlayerAvatar(p.id, ""), 200)
 			return
 		}
 		slide(game, p, props)
