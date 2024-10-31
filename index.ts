@@ -10,6 +10,8 @@ import { applySlowdown } from "./src/slowdown";
 import { defaults } from "./src/settings";
 import initChooser from "./src/chooser";
 import { welcomePlayer } from "./src/welcome";
+import { AsyncDatabase as Database } from "promised-sqlite3";
+import { createTables } from "./src/db";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented,
@@ -53,7 +55,9 @@ export class PlayerAugmented {
   get position() { return room.getPlayer(this.id).position }
 }
 
+let gameId = 0;
 export class Game {
+  id: number;
   inPlay: boolean;
   animation: boolean;
   eventCounter: number;
@@ -65,6 +69,8 @@ export class Game {
   rotateNextKick: boolean;
 
   constructor() {
+    gameId += 1
+    this.id = gameId
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
@@ -132,6 +138,13 @@ export let game: Game | null;
 //})
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
+  db = await Database.open('db.sqlite')
+  try {
+    console.log('Creating DB...')
+    await createTables(db)
+  } catch (e) {
+    console.log('\nDB tables already created.')
+  }
   room = HBInit(args)
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
@@ -184,6 +197,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         room.kickPlayer(p.id, "You are already on the server.", false)
       }
     }
+    await db.run('UPDATE players SET name=? WHERE auth=?', [p.name, p.auth])
     welcomePlayer(room, p)
     room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
