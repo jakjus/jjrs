@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import { applySlowdown } from "./src/slowdown";
 import { defaults } from "./src/settings";
 import initChooser from "./src/chooser";
+import { welcomePlayer } from "./src/welcome";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented,
@@ -134,8 +135,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args)
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
-  room.setTimeLimit(0)
-  room.setScoreLimit(1)
+  room.setTimeLimit(5)
+  room.setScoreLimit(0)
   room.startGame()
 
   //room.startGame()
@@ -178,6 +179,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       room.setPlayerAdmin(p.id, true)
       //room.setPlayerTeam(p.id, 1)
     }
+    if (players.map(p => p.auth).includes(p.auth)) {
+      room.kickPlayer(p.id, "You are already on the server.", false)
+    }
+    welcomePlayer(room, p)
     room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
     if (game) {

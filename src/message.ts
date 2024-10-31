@@ -10,5 +10,9 @@ export const sendMessage = (msg: string, p?: PlayerAugmented | PlayerObject | nu
 }
 
 export const playerMessage = async (p: PlayerAugmented, msg: string) => {
-    room.sendAnnouncement(`${p.name}: ${msg}`, undefined, 0xe6e9f2, "normal", 1)
+    if (p.afk) {
+        sendMessage(`You are AFK. Write "!back" to come back.`, p)
+    }
+    const card = p.cardsAnnounced < 1 ? `` : p.cardsAnnounced < 2 ? `🟨 ` : `🟥 `
+    room.sendAnnouncement(`${card}${p.name}: ${msg}`, undefined, 0xe6e9f2, "normal", 1)
 }

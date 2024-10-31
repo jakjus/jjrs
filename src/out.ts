@@ -300,7 +300,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 
 	// Hide fake ball and replace with real ball
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
-	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.45 : defaults.ballInvMass
+	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.65 : defaults.ballInvMass
 	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass })
 	// allow fast pass during first second, then set mass for long pass
 	game.animation = false
