@@ -209,11 +209,16 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
       }
     }
+    game?.currentPlayers.push(newPlayer)
     players.push(newPlayer)
   }
 
   room.onPlayerLeave = async p => {
     players = players.filter(pp => p.id != pp.id)
+    if (players.length < 2) {
+      room.stopGame()
+      room.startGame()
+    }
   }
 
   room.onPlayerChat = (p, msg) => {
