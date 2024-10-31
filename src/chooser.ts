@@ -90,6 +90,7 @@ const initChooser = (room: RoomObject) => {
 		if (ready().length >= 4) {
 			const rd = ready()
 			duringDraft = true
+			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
 			const draftResult = await performDraft(room, rd, winnerIds, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
 			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)

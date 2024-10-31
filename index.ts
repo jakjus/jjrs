@@ -30,6 +30,7 @@ export class PlayerAugmented {
   activation: number;
   team: 0 | 1 | 2;
   slowdown: number;
+  gameId: number;
   slowdownUntil: number;
   cooldownUntil: number;
   fouledAt: { x: number, y: number };
@@ -37,6 +38,7 @@ export class PlayerAugmented {
   afk: boolean;
   constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
+    this.gameId = gameId
     this.name = p.name;
     this.auth = p.auth;
     this.conn = p.conn;
@@ -45,9 +47,9 @@ export class PlayerAugmented {
     this.cardsAnnounced = p.cardsAnnounced || 0;
     this.activation = 0;
     this.sliding = false;
-    this.slowdown = 0;
-    this.slowdownUntil = 0;
-    this.cooldownUntil = 0;
+    this.slowdown = p.slowdown || 0;
+    this.slowdownUntil = p.slowdownUntil || 0;
+    this.cooldownUntil = p.cooldownUntil || 0;
     this.canCallFoulUntil = 0;
     this.fouledAt = { x: 0, y: 0 };
     this.afk = false;
@@ -138,13 +140,13 @@ export let game: Game | null;
 //})
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
-  db = await Database.open('db.sqlite')
-  try {
-    console.log('Creating DB...')
-    await createTables(db)
-  } catch (e) {
-    console.log('\nDB tables already created.')
-  }
+  //db = await Database.open('db.sqlite')
+  //try {
+  //  console.log('Creating DB...')
+  //  await createTables(db)
+  //} catch (e) {
+  //  console.log('\nDB tables already created.')
+  //}
   room = HBInit(args)
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
@@ -197,13 +199,13 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         room.kickPlayer(p.id, "You are already on the server.", false)
       }
     }
-    await db.run('UPDATE players SET name=? WHERE auth=?', [p.name, p.auth])
+    //await db.run('UPDATE players SET name=? WHERE auth=?', [p.name, p.auth])
     welcomePlayer(room, p)
     room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
-      if (found) {
+      if (found && found.gameId == gameId) {
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
       }
     }
