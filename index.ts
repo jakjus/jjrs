@@ -241,8 +241,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     game = new Game()
     players.forEach(p => {
       p.slowdownUntil = 0
-      p.foulsMeter = p.foulsMeter || 0;
-      p.cardsAnnounced = p.cardsAnnounced || 0;
+      p.foulsMeter = 0;
+      p.cardsAnnounced = 0;
       p.activation = 0;
       p.sliding = false;
       p.slowdown = 0;

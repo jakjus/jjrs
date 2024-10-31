@@ -16,7 +16,7 @@ export const checkAllX = (game: Game) => {
 			if (new Date().getTime() < pp.canCallFoulUntil && pp.activation > 20) {
 				sendMessage(`${pp.name} has called foul.`)
 				if (isPenalty(pp)) {
-					penalty(game, pp.team, pp.fouledAt)
+					penalty(game, pp.team, {...pp.fouledAt})
 					pp.activation = 0
 					pp.canCallFoulUntil = 0
 					return
