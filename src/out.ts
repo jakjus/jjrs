@@ -6,6 +6,7 @@ import { penaltyPoint } from './settings';
 
 const blink = async (game: Game, savedEventCounter: number, forTeam: TeamID) => {
 	for (let i=0; i<140; i++) {
+		if (!room.getScores()) { return }
 		// Cancel blink if there is another out
 		if (game.inPlay || (savedEventCounter != game.eventCounter)) {
 			room.setDiscProperties(0, {color: colors.white})
@@ -232,6 +233,7 @@ const throwFakeBall = async (ball: DiscPropertiesObject) => {
 		let oldRadius = ball.radius
 		room.setDiscProperties(secondBallId, { x: ball.x+ball.xspeed, y: ball.y+ball.yspeed, xspeed: ball.xspeed, yspeed: ball.yspeed, radius: oldRadius })
 		for (let i=0; i<100; i++) {
+			if (!room.getScores()) { return }
 			room.setDiscProperties(secondBallId, { radius: oldRadius })
 			if (i>40) {
 				if (oldRadius < 0.4) {
@@ -291,6 +293,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		})
 	for (let i=0; i<1000; i++) {
 		const thirdBall = room.getDiscProperties(thirdBallId)
+		if (!thirdBall) { return }
 		const distToDest = Math.sqrt((thirdBall.x-toPos.x)**2+(thirdBall.y-toPos.y)**2)
 		if (distToDest<1.2) {
 			break

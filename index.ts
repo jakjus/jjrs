@@ -208,8 +208,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       if (found && found.gameId == gameId) {
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
       }
+      game.currentPlayers.push(newPlayer)
     }
-    game?.currentPlayers.push(newPlayer)
     players.push(newPlayer)
   }
 
