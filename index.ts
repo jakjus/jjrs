@@ -179,8 +179,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       room.setPlayerAdmin(p.id, true)
       //room.setPlayerTeam(p.id, 1)
     }
-    if (players.map(p => p.auth).includes(p.auth)) {
-      room.kickPlayer(p.id, "You are already on the server.", false)
+    if (!process.env.DEBUG) {
+      if (players.map(p => p.auth).includes(p.auth)) {
+        room.kickPlayer(p.id, "You are already on the server.", false)
+      }
     }
     welcomePlayer(room, p)
     room.setPlayerAvatar(p.id, "")
