@@ -176,20 +176,22 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   let i = 0;
   room.onGameTick = () => {
     if (!game) { return }
-    if (game.inPlay) {
-      game.handleBallOutOfBounds()
-      game.rotateBall()
-    } else {
-      game.handleBallInPlay()
-    }
-    game.handleBallTouch()
-    game.checkAllX()
-    game.checkFoul()
-    i++;
-    if (i > 6) {
-      i = 0
-      game.applySlowdown()
-    }
+    try {
+      if (game.inPlay) {
+        game.handleBallOutOfBounds()
+        game.rotateBall()
+      } else {
+        game.handleBallInPlay()
+      }
+      game.handleBallTouch()
+      game.checkAllX()
+      game.checkFoul()
+      i++;
+      if (i > 6) {
+        i = 0
+        game.applySlowdown()
+      }
+    } catch(e) {console.log('Error:', e)}
   }
 
   room.onPlayerJoin = async p => {
