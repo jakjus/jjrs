@@ -305,7 +305,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	// allow fast pass during first second, then set mass for long pass
 	game.animation = false
 	await sleep(2000)
-	if (evCounter == game.eventCounter) {
+	if (evCounter == game.eventCounter && !game.inPlay) {
 		room.setDiscProperties(0, { invMass: toMass })
 		if (toMass != defaults.ballInvMass) {
 			room.setDiscProperties(0, { color: colors.powerball })

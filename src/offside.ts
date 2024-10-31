@@ -82,7 +82,7 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	room.setDiscProperties(colorLastDefDiscs[1], { x: secondOsLine.position.x+atkDirection*(secondOsRadius+1), y: -mapBounds.y-100 })
 	//await sleep(100)
 	room.pauseGame(true)
-	await sleep(10000)
+	await sleep(8000)
 	room.pauseGame(false)
 	game.lastTouch = null
 	await sleep(100)
