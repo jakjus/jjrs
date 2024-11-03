@@ -190,7 +190,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 						room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 					}
 				})
-			sendMessage('BLUE enter the draft area (25s).')
+			sendMessage('BLUE enter the draft area (20s).')
 			await sleep(20000)
 			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
 
@@ -276,11 +276,11 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 				// if picker left
 				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
 					sendMessage('Red picker left. Changing red picker...')
-					setNewPickerRed()
+					await setNewPickerRed()
 				}
 				if (!room.getPlayerList().map(p => p.id).includes(bluePicker.id)) {
 					sendMessage('Blue picker left. Changing blue picker...')
-					setNewPickerBlue()
+					await setNewPickerBlue()
 				}
 
 				totalWait += sleepTime
@@ -294,7 +294,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					if (playersInZone(redZone).length >= playersInZone(blueZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							sendMessage('timeout')
-							setNewPickerRed()
+							await setNewPickerRed()
 							continue
 						}
 						pickingNow = 'blue'
@@ -309,7 +309,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					if (playersInZone(blueZone).length >= playersInZone(redZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
 							sendMessage('Timeout. Changing blue picker...')
-							setNewPickerBlue()
+							await setNewPickerBlue()
 							continue
 						}
 						pickingNow = 'red'

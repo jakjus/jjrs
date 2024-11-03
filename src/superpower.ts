@@ -84,8 +84,11 @@ const slide = async (game: Game, p: PlayerAugmented, props: DiscPropertiesObject
 }
 
 const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
-	if (game.animation) { return }
 	if (p.slowdown) { return }
+	if (game.animation) {
+		room.setPlayerAvatar(p.id, "")
+		return
+	}
 	const props = room.getPlayerDiscProperties(p.id)
 	const ball = room.getDiscProperties(0)
 	const dist = Math.sqrt((props.x-ball.x)**2+(props.y-ball.y)**2)
