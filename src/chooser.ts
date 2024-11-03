@@ -169,18 +169,20 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 			}
 			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(draftMap)
-			room.startGame()
-			await sleep(100)
-			sendMessage('Draft has started. Captains choose players by KICKING (X).')
 			// set blue players kickable (kicking them by red players results in
 			// choose)
 			players.slice(0,2).forEach(async p => {
 				room.setPlayerTeam(p.id, 1);
-				await sleep(100)
+			})
+			await sleep(100)
+			room.startGame()
+			await sleep(100)
+			players.slice(0,2).forEach(async p => {
 				if (room.getPlayer(p.id)) {
 					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 				}
 			})
+			sendMessage('Draft has started. Captains choose players by KICKING (X).')
 			let redPicker = players[0]
 			let bluePicker = players[1]
 			players.slice(2)
