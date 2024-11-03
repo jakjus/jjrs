@@ -50,7 +50,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	if (isPenalty(victim)) {
 		cardsFactor += 0.3
 	}
-	const power = Math.sqrt((sliderProps.xspeed-victimProps.xspeed)**2+(sliderProps.yspeed-victimProps.yspeed)**2)
+	const power = Math.sqrt((sliderProps.xspeed-victimProps.xspeed)**2+(sliderProps.yspeed-victimProps.yspeed)**2)*0.9
 	const slowdown = power > 2.7 ? 0.05*power : 0.04*power
 	const av = power > 2.7 ? '❌' : '🩹'
 	room.setPlayerAvatar(victim.id, av)
