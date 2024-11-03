@@ -47,13 +47,10 @@ const initChooser = (room: RoomObject) => {
 	}
 
 	const refill = () => {
-		for (let i=0; i<20; i++) {
-			console.log('doing refill')
-			if (red().length + blue().length < maxTeamSize*2 && spec().filter(p => !toAug(p).afk).length > 0) {
-				addToGame(room, spec().filter(p => !toAug(p).afk)[0])
-			} else {
-				return
-			}
+		const specs = spec().filter(p => !toAug(p).afk)
+		for (let i=0; i<specs.length; i++) {
+			const toTeam = i % 2 == 0 ? 1 : 2
+			room.setPlayerTeam(specs[i].id, toTeam)
 		}
 	}
 
