@@ -262,7 +262,9 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 		radius: 0,
 		xspeed: 0,
 		yspeed: 0,
-		cMask: 0, xgravity: 0, ygravity: 0,
+		cMask: 0,
+		cGroup: room.CollisionFlags.c0,
+		xgravity: 0, ygravity: 0,
 		x: xPushOutOfSight,
 		y: yPushOutOfSight,
 		invMass: 0.00001
@@ -308,7 +310,7 @@ const throwRealBall = async (game: Game, forTeam: TeamID, toPos: {x: number, y: 
 	// Hide fake ball and replace with real ball
 	room.setDiscProperties(thirdBallId, {x: 1000, y: 860})
 	const toMass = game.rotateNextKick ? defaults.ballInvMass+0.57 : defaults.ballInvMass
-	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, invMass: defaults.ballInvMass })
+	room.setDiscProperties(0, {x: toPos.x, y: toPos.y, radius: defaults.ballRadius, cMask: 63, cGroup: room.CollisionFlags.ball, invMass: defaults.ballInvMass })
 	// allow fast pass during first second, then set mass for long pass
 	game.animation = false
 	await sleep(2000)

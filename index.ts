@@ -1,4 +1,5 @@
 import { Headless } from "haxball.js"
+import { duringDraft } from "./src/chooser"
 import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
 import { handleBallOutOfBounds, handleBallInPlay, clearThrowInBlocks } from "./src/out";
@@ -252,7 +253,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   }
 
   room.onGameStart = _ => {
-    game = new Game()
+    if (!duringDraft) {
+      game = new Game()
+    }
     players.forEach(p => {
       p.slowdownUntil = 0
       p.foulsMeter = 0;

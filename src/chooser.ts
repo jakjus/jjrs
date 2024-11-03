@@ -9,7 +9,7 @@ import { teamSize } from "./settings";
 const maxTeamSize = process.env.DEBUG ? 2 : teamSize
 let isRunning: boolean = false;
 let isRanked: boolean = false;
-let duringDraft: boolean = false;
+export let duringDraft: boolean = false;
 const red = () => room.getPlayerList().filter(p => p.team == 1)
 const blue = () => room.getPlayerList().filter(p => p.team == 2)
 const spec = () => room.getPlayerList().filter(p => p.team == 0)
@@ -85,6 +85,7 @@ const initChooser = (room: RoomObject) => {
 			game.inPlay = false
 			players.forEach(p => p.canCallFoulUntil = 0)
 		}
+		_onTeamGoal(team)
 	}
 
 	const _onTeamVictory = room.onTeamVictory
@@ -142,13 +143,10 @@ const initChooser = (room: RoomObject) => {
 		room.startGame()
 	}
 
-	const _onGameStart = room.onGameStart
-	room.onGameStart = async byPlayer => {
-		if (duringDraft) {
-			return
-		}
-		_onGameStart(byPlayer)
-	}
+	//const _onGameStart = room.onGameStart
+	//room.onGameStart = async byPlayer => {
+	//	_onGameStart(byPlayer)
+	//}
 
 	// add that handlebalance when someone leaves or put someone from spec[0]
 	//room.onPlayerLeave
