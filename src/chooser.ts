@@ -44,8 +44,13 @@ const initChooser = (room: RoomObject) => {
 	}
 
 	const refill = () => {
-		while (red().length + blue().length < maxTeamSize*2 && spec().filter(p => !toAug(p).afk).length > 0) {
-			addToGame(room, spec()[0])
+		for (let i=0; i<20; i++) {
+			console.log('doing refill')
+			if (red().length + blue().length < maxTeamSize*2 && spec().filter(p => !toAug(p).afk).length > 0) {
+				addToGame(room, spec()[0])
+			} else {
+				return
+			}
 		}
 	}
 
@@ -97,7 +102,6 @@ const initChooser = (room: RoomObject) => {
 			const draftResult = await performDraft(room, rd, winnerIds, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
 			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)
-			duringDraft = false
 			room.getPlayerList().forEach(p => {
 				if (p.team != 0) {
 					room.setPlayerTeam(p.id, 0)
@@ -105,6 +109,7 @@ const initChooser = (room: RoomObject) => {
 			})
 			draftResult?.red?.forEach(p => room.setPlayerTeam(p.id, 1))
 			draftResult?.blue?.forEach(p => room.setPlayerTeam(p.id, 2))
+			duringDraft = false
 			if (draftResult?.red?.length == maxTeamSize && draftResult?.blue?.length == maxTeamSize) {
 				isRanked = true
 				sendMessage('Ranked game.')
@@ -155,17 +160,24 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 			sendMessage('Draft has started. Captains choose players by KICKING (X).')
 			// set blue players kickable (kicking them by red players results in
 			// choose)
-			players.slice(0,2).forEach(p => {
+			players.slice(0,2).forEach(async p => {
 				room.setPlayerTeam(p.id, 1);
-				room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
+				await sleep(100)
+				if (room.getPlayer(p.id)) {
+					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
+				}
 			})
 			room.startGame()
 			let redPicker = players[0]
 			let bluePicker = players[1]
-			players.slice(2).forEach(p =>
-													{ room.setPlayerTeam(p.id, 2)
-													room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
-													})
+			players.slice(2)
+			.forEach(async p =>
+				{ room.setPlayerTeam(p.id, 2)
+					await sleep(100)
+				if (room.getPlayer(p.id)) {
+						room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
+					}
+				})
 			sendMessage('BLUE enter the draft area (25s).')
 			await sleep(25000)
 			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
@@ -252,7 +264,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					sendMessage('Red picker left. Changing red picker...')
 					setNewPickerRed()
 				}
-				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+				if (!room.getPlayerList().map(p => p.id).includes(bluePicker.id)) {
 					sendMessage('Blue picker left. Changing blue picker...')
 					setNewPickerBlue()
 				}

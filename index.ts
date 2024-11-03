@@ -154,6 +154,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.setScoreLimit(0)
   if (process.env.DEBUG) {
     room.setScoreLimit(1)
+    room.setTimeLimit(1)
   }
   room.startGame()
 

@@ -133,6 +133,9 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 	}
 
 	room.getPlayerList().filter(p => p.team != 0).forEach(p => {
+		if (!room.getScores()) {
+			return
+		}
 		room.setPlayerDiscProperties(p.id, {invMass: 1000000})
 		const defCf = p.team == 1 ? room.CollisionFlags.red : room.CollisionFlags.blue
 		if (p.team == forTeam) {
@@ -153,6 +156,7 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 	if (r) {return}
 
 	const newForTeam = forTeam == 1 ? 2 : 1
+	if (!room.getScores()) { return }
 	throwIn(game, newForTeam, pos)
 }
 
