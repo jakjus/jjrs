@@ -175,6 +175,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   //loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
 
   let i = 0;
+  room.onTeamGoal = team => {
+  }
+
   room.onGameTick = () => {
     if (!game) { return }
     try {

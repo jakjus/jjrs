@@ -72,7 +72,7 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
 
 const slide = async (game: Game, p: PlayerAugmented, props: DiscPropertiesObject) => {
 	room.setPlayerDiscProperties(p.id, {
-			xspeed: props.xspeed * 3.2, yspeed: props.yspeed * 3.2, xgravity: -props.xspeed * 0.026, ygravity: -props.yspeed * 0.026,
+			xspeed: props.xspeed * 3.4, yspeed: props.yspeed * 3.4, xgravity: -props.xspeed * 0.026, ygravity: -props.yspeed * 0.026,
 	});
 	room.setPlayerAvatar(p.id, '👟');
 	p.sliding = true;

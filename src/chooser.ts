@@ -1,4 +1,4 @@
-import { room } from "..";
+import { room, players } from "..";
 import { sendMessage } from "./message";
 import { game } from "..";
 import { sleep } from "./utils";
@@ -50,7 +50,7 @@ const initChooser = (room: RoomObject) => {
 		for (let i=0; i<20; i++) {
 			console.log('doing refill')
 			if (red().length + blue().length < maxTeamSize*2 && spec().filter(p => !toAug(p).afk).length > 0) {
-				addToGame(room, spec()[0])
+				addToGame(room, spec().filter(p => !toAug(p).afk)[0])
 			} else {
 				return
 			}
@@ -80,6 +80,14 @@ const initChooser = (room: RoomObject) => {
 
 	if (room.getScores()) {
 		isRunning = true
+	}
+
+	const _onTeamGoal = room.onTeamGoal
+	room.onTeamGoal = team => {
+		if (game) {
+			game.inPlay = false
+			players.forEach(p => p.canCallFoulUntil = 0)
+		}
 	}
 
 	const _onTeamVictory = room.onTeamVictory
@@ -119,6 +127,7 @@ const initChooser = (room: RoomObject) => {
 			} else {
 				sendMessage('Unranked game.')
 				isRanked = false
+				refill()
 			}
 		} else {
 			isRanked = false
@@ -160,6 +169,8 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 			}
 			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(draftMap)
+			room.startGame()
+			await sleep(100)
 			sendMessage('Draft has started. Captains choose players by KICKING (X).')
 			// set blue players kickable (kicking them by red players results in
 			// choose)
@@ -170,7 +181,6 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.red | room.CollisionFlags.c3 | room.CollisionFlags.c1 })
 				}
 			})
-			room.startGame()
 			let redPicker = players[0]
 			let bluePicker = players[1]
 			players.slice(2)
@@ -232,6 +242,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					const midPlayers = playersInZone(midZone)
 					redPicker = midPlayers[0]
 					room.setPlayerTeam(redPicker.id, 1)
+					await sleep(100)
 					room.setPlayerDiscProperties(redPicker.id, {x: -120, y: 0})
 					if (pickingNow == 'red') {
 						setUnlock(redPicker)
@@ -241,7 +252,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					totalWait = 0
 				}
 
-				const setNewPickerBlue = () => {
+				const setNewPickerBlue = async () => {
 					if (room.getPlayerList().map(p => p.id).includes(bluePicker.id)) {
 						room.setPlayerTeam(bluePicker.id, 0)
 						afkHandler(bluePicker)
@@ -249,6 +260,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					const midPlayers = playersInZone(midZone)
 					bluePicker = midPlayers[0]
 					room.setPlayerTeam(bluePicker.id, 1)
+					await sleep(100)
 					room.setPlayerDiscProperties(bluePicker.id, {x: 120, y: 0})
 					if (pickingNow == 'blue') {
 						setUnlock(bluePicker)
