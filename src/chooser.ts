@@ -35,6 +35,9 @@ export const addToGame = (room: RoomObject, p: PlayerObject) => {
 
 const initChooser = (room: RoomObject) => {
 	const balanceTeams = () => {
+		if (duringDraft || isRanked) {
+			return
+		}
 		// To be used only during unranked
 		if (red().length > blue().length+1) {
 			room.setPlayerTeam(red()[0].id, 2)
@@ -64,7 +67,7 @@ const initChooser = (room: RoomObject) => {
 
 	const _onPlayerLeave = room.onPlayerLeave
 	room.onPlayerLeave = p => {
-		if (!isEnoughPlayers()) {
+		if (!isEnoughPlayers() && !duringDraft) {
 			if (isRanked) {
 				sendMessage('Not enough players. Unranked game.')
 			}
@@ -179,7 +182,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					}
 				})
 			sendMessage('BLUE enter the draft area (25s).')
-			await sleep(25000)
+			await sleep(20000)
 			room.getPlayerList().filter(p => p.team == 2).forEach(p => room.setPlayerDiscProperties(p.id, { cGroup: room.CollisionFlags.blue | room.CollisionFlags.kick | room.CollisionFlags.c1 }))  // dont collide with middle line blocks and set kickable
 
 			const setLock = (p: PlayerObject) => {
