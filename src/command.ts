@@ -48,7 +48,7 @@ const showHelp = (p: PlayerAugmented) => {
 }
 
 const showDiscord = (p: PlayerAugmented) => {
-    sendMessage(`-`, p)
+    sendMessage(`Discord: discord.gg/zupRtBMUjb`)
 }
 
 const bb = (p: PlayerAugmented) => {
