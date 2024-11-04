@@ -63,7 +63,8 @@ const initChooser = (room: RoomObject) => {
 	}
 
 	const _onPlayerLeave = room.onPlayerLeave
-	room.onPlayerLeave = p => {
+	room.onPlayerLeave = async p => {
+		await sleep(100)
 		if (!isEnoughPlayers() && !duringDraft) {
 			if (isRanked) {
 				sendMessage('Not enough players. Unranked game.')

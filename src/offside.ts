@@ -4,6 +4,7 @@ import { sendMessage } from "./message"
 import { sleep } from "./utils"
 import { offsideDiscs, mapBounds, defaults } from "./settings"
 import { freeKick } from "./out"
+import { duringDraft } from "./chooser"
 
 export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
 	if (game.inPlay) {
@@ -84,6 +85,7 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	room.pauseGame(true)
 	await sleep(8000)
 	room.pauseGame(false)
+	if (!room.getScores() || duringDraft) { return }
 	game.lastTouch = null
 	await sleep(100)
 	const toHide = [...colorOffsideDiscs, ...colorLastDefDiscs]
