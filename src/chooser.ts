@@ -105,7 +105,7 @@ const initChooser = (room: RoomObject) => {
 		sendMessage('Break time: 10 seconds.')
 		await sleep(10000)
 		const winnerIds = room.getPlayerList().filter(p => p.team == winTeam).map(p => p.id)
-		if (ready().length >= 4) {
+		if (ready().length >= 12) {
 			const rd = ready()
 			duringDraft = true
 			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
