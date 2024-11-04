@@ -26,6 +26,7 @@ const savePositionsOnTouch = (game: Game) => {
 
 const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	const lt = game.lastTouch
+	const currentGameId = game.id
 	if (!lt) { return }
 	const kickTeam = lt?.byPlayer.team
 	if (kickTeam != p.team) { return }
@@ -83,9 +84,9 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
 	room.setDiscProperties(colorLastDefDiscs[1], { x: secondOsLine.position.x+atkDirection*(secondOsRadius+1), y: -mapBounds.y-100 })
 	//await sleep(100)
 	room.pauseGame(true)
-	await sleep(8000)
+	await sleep(6000)
 	room.pauseGame(false)
-	if (!room.getScores() || duringDraft) { return }
+	if (!room.getScores() || duringDraft || (game.id != currentGameId)) { return }
 	game.lastTouch = null
 	await sleep(100)
 	const toHide = [...colorOffsideDiscs, ...colorLastDefDiscs]

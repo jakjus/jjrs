@@ -102,6 +102,7 @@ const goalKick = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}
 
 const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number}) => {
 	announceCards(game)
+	const currentGameId = game.id
 	game.eventCounter += 1
 	game.skipOffsideCheck = true
 	const savedEventCounter = game.eventCounter
@@ -154,7 +155,7 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 
 	const r = await blink(game, savedEventCounter, forTeam)
 	if (r) {return}
-	if (!room.getScores()) { return }
+	if (!room.getScores() || game?.id != currentGameId) { return }   // if no game or next game started
 	const newForTeam = forTeam == 1 ? 2 : 1
 	throwIn(game, newForTeam, pos)
 }

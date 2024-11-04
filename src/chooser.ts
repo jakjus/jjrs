@@ -70,7 +70,6 @@ const initChooser = (room: RoomObject) => {
 				sendMessage('Not enough players. Unranked game.')
 			}
 			isRanked = false
-			refill()
 			balanceTeams()
 		}
 		_onPlayerLeave(p)
@@ -84,6 +83,7 @@ const initChooser = (room: RoomObject) => {
 	room.onTeamGoal = team => {
 		if (game) {
 			game.inPlay = false
+			game.positionsDuringPass = []
 			players.forEach(p => p.canCallFoulUntil = 0)
 		}
 		_onTeamGoal(team)
@@ -105,7 +105,7 @@ const initChooser = (room: RoomObject) => {
 		sendMessage('Break time: 10 seconds.')
 		await sleep(10000)
 		const winnerIds = room.getPlayerList().filter(p => p.team == winTeam).map(p => p.id)
-		if (ready().length >= 12) {
+		if (ready().length >= maxTeamSize*2+1) {
 			const rd = ready()
 			duringDraft = true
 			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
@@ -273,11 +273,11 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 					break
 				}
 				// if picker left
-				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id)) {
+				if (!room.getPlayerList().map(p => p.id).includes(redPicker.id) || toAug(redPicker).afk) {
 					sendMessage('Red picker left. Changing red picker...')
 					await setNewPickerRed()
 				}
-				if (!room.getPlayerList().map(p => p.id).includes(bluePicker.id)) {
+				if (!room.getPlayerList().map(p => p.id).includes(bluePicker.id) || toAug(bluePicker).afk) {
 					sendMessage('Blue picker left. Changing blue picker...')
 					await setNewPickerBlue()
 				}
@@ -292,7 +292,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 				if (pickingNow == 'red') {
 					if (playersInZone(redZone).length >= playersInZone(blueZone).length+1 || totalWait > pickTimeLimit) {
 						if (totalWait > pickTimeLimit) {
-							sendMessage('timeout')
+							sendMessage('Timeout. Changing red picker...')
 							await setNewPickerRed()
 							continue
 						}

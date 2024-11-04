@@ -1,4 +1,5 @@
 import { Headless } from "haxball.js"
+import { sendMessage } from "./src/message"
 import { duringDraft } from "./src/chooser"
 import { isCommand, handleCommand } from "./src/command"
 import { playerMessage } from "./src/message"
@@ -37,6 +38,7 @@ export class PlayerAugmented {
   fouledAt: { x: number, y: number };
   canCallFoulUntil: number;
   afk: boolean;
+  afkCounter: number;
   constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
     this.gameId = gameId
@@ -54,6 +56,7 @@ export class PlayerAugmented {
     this.canCallFoulUntil = 0;
     this.fouledAt = { x: 0, y: 0 };
     this.afk = false;
+    this.afkCounter = 0;
   }
   get position() { return room.getPlayer(this.id).position }
 }
@@ -81,7 +84,7 @@ export class Game {
     this.ballRotation = {x: 0, y: 0, power: 0};
     this.positionsDuringPass = [];
     this.skipOffsideCheck = false;
-    this.currentPlayers = [...players];
+    this.currentPlayers = [...players];  // used to keep track on leavers in case they reconnect with red card or injury
     this.rotateNextKick = false;
     //this.state = "play";
   }
@@ -176,6 +179,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   //loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
 
   let i = 0;
+  let j = 0;
   room.onTeamGoal = team => {
   }
 
@@ -196,7 +200,29 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         i = 0
         game.applySlowdown()
       }
+
+      if (duringDraft) {
+        j++;
+      }
+
+      if (j > 60) {
+        j = 0
+        players.filter(p => p.team == 1 || p.team == 2).forEach(p => {
+          p.afkCounter += 1;
+          if (p.afkCounter == 18) {
+            sendMessage('Move! You will be AFK in 5 seconds...')
+          } else if (p.afkCounter > 23) {
+            p.afkCounter = 0
+            room.setPlayerTeam(p.id, 0)
+            p.afk = true
+          }
+        })
+      }
     } catch(e) {console.log('Error:', e)}
+  }
+
+  room.onPlayerActivity = p => {
+    toAug(p).afkCounter = 0
   }
 
   room.onPlayerJoin = async p => {
@@ -215,8 +241,11 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     let newPlayer = new PlayerAugmented(p)
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
+      console.log('found is', found)
       if (found && found.gameId == gameId) {
+        game.currentPlayers = game.currentPlayers.filter(ppp => ppp.auth != p.auth)
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
+        console.log('newplayer is ', newPlayer)
       }
       game.currentPlayers.push(newPlayer)
     }
@@ -237,10 +266,13 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       if (msg == 'a') {
         room.setPlayerDiscProperties(p.id, {x: -10})
       }
-      console.log('paug', pp)
-      console.log('props', room.getPlayerDiscProperties(p.id))
-      console.log('ball', room.getDiscProperties(0))
-      console.log('game', game)
+      if (msg == 'b') {
+        console.log(game?.currentPlayers)
+      }
+      //console.log('paug', pp)
+      //console.log('props', room.getPlayerDiscProperties(p.id))
+      //console.log('ball', room.getDiscProperties(0))
+      //console.log('game', game)
     }
 
     if (isCommand(msg)){
@@ -257,6 +289,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       game = new Game()
     }
     players.forEach(p => {
+      if (game) {
+        p.gameId = game.id
+      }
       p.slowdownUntil = 0
       p.foulsMeter = 0;
       p.cardsAnnounced = 0;
