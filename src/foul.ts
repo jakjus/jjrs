@@ -58,7 +58,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
 	victim.slowdownUntil = new Date().getTime()+1000*(0.1*power**8*(0.5+0.5*Math.random()*Math.random()))
 	victim.canCallFoulUntil = new Date().getTime()+4000
 	sendMessage('You have been fouled. You can call foul by holding X in the next 4 seconds.', victim)
-	slider.foulsMeter += 0.8*power*cardsFactor*(Math.random()*0.2+0.9)
+	slider.foulsMeter += 0.7*power*cardsFactor*(Math.random()*0.2+0.9)
 }
 
 export const announceCards = (game: Game) => {
