@@ -10,6 +10,7 @@ export const checkAllX = (game: Game) => {
 	players.filter(p => p.team != 0)
 	.forEach(pp => {
 		const props = room.getPlayerDiscProperties(pp.id)
+		if (!props) { return }
 		// When X is PRESSED
 		if (props.damping == 0.959) {
 			pp.activation++

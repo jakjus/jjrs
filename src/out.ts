@@ -154,9 +154,8 @@ const throwIn = async (game: Game, forTeam: TeamID, pos: {x: number, y: number})
 
 	const r = await blink(game, savedEventCounter, forTeam)
 	if (r) {return}
-
-	const newForTeam = forTeam == 1 ? 2 : 1
 	if (!room.getScores()) { return }
+	const newForTeam = forTeam == 1 ? 2 : 1
 	throwIn(game, newForTeam, pos)
 }
 
