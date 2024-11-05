@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import { toAug } from "..";
 import { teamSize } from "./settings";
 
-const maxTeamSize = process.env.DEBUG ? 2 : teamSize
+const maxTeamSize = process.env.DEBUG ? 1 : teamSize
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 export let duringDraft: boolean = false;

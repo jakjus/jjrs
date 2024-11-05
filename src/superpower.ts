@@ -2,7 +2,7 @@ import { toAug, room, players, PlayerAugmented, Game } from "../index"
 import { sendMessage } from "./message"
 import { freeKick, penalty } from "./out"
 import { handleLastTouch } from "./offside"
-import { defaults } from "./settings"
+import { defaults, mapBounds } from "./settings"
 import { sleep } from "./utils"
 import { isPenalty } from "./foul"
 
@@ -15,7 +15,7 @@ export const checkAllX = (game: Game) => {
 		// When X is PRESSED
 		if (props.damping == 0.959) {
 			pp.activation++
-			if (new Date().getTime() < pp.canCallFoulUntil && pp.activation > 20) {
+			if (new Date().getTime() < pp.canCallFoulUntil && pp.activation > 20 && Math.abs(pp.fouledAt.x) < mapBounds.x) {
 				sendMessage(`${pp.name} has called foul.`)
 				if (isPenalty(pp)) {
 					penalty(game, pp.team, {...pp.fouledAt})
