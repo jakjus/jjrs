@@ -5,7 +5,7 @@ import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
 import { teamSize } from "./settings";
-import { calculateAndExec } from "hax-standard-elo";
+import { calculateChanges, execChanges } from "hax-standard-elo";
 import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
 
 const maxTeamSize = process.env.DEBUG ? 1 : teamSize
@@ -109,8 +109,22 @@ const initChooser = (room: RoomObject) => {
 			}
 
 
+			const changes = await calculateChanges(room, getEloOfPlayer, game.currentPlayers)
+			console.log('changes', changes)
+			changes.forEach(co => {
+				const p = room.getPlayer(co.playerId)
+				if (p) {
+					sendMessage(`Your ELO: ${toAug(p).elo} → ${toAug(p).elo+co.change} (${co.change > 0 ? '+': ''}${co.change})`, p)
+				}
+			})
 
-			calculateAndExec(room, getEloOfPlayer, changeEloOfPlayer, undefined, game.currentPlayers)
+			await execChanges(changes, getEloOfPlayer, changeEloOfPlayer)
+			changes.forEach(co => {
+				if (players.map(p => p.id).includes(co.playerId)) {
+					toAug(room.getPlayer(co.playerId)).elo += co.change  // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
+				}
+			})
+
 
 			sendMessage('It was ranked game, but ELO is not handled in this version.')
 		}
@@ -119,7 +133,7 @@ const initChooser = (room: RoomObject) => {
 		sendMessage('Break time: 10 seconds.')
 		await sleep(10000)
 		const winnerIds = room.getPlayerList().filter(p => p.team == winTeam).map(p => p.id)
-		if (ready().length >= maxTeamSize*2+1) {
+		if (ready().length >= maxTeamSize*2) {
 			const rd = ready()
 			duringDraft = true
 			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
