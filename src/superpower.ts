@@ -125,8 +125,8 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
 	const vecX = xx/magnitude
 	const vecY = yy/magnitude
 	const dir = {x: vecX, y: vecY}
-	const totalXspeed = ((dir.x+props.xspeed*0.4)*(activationRange-dist)**0.2)*4.5
-	const totalYspeed = ((dir.y+props.yspeed*0.4)*(activationRange-dist)**0.2)*4.5
+	const totalXspeed = ((dir.x+props.xspeed*0.4)*(activationRange-dist)**0.2)*4.9
+	const totalYspeed = ((dir.y+props.yspeed*0.4)*(activationRange-dist)**0.2)*4.9
 	room.setDiscProperties(0, {
 		xspeed: totalXspeed,
 		yspeed: totalYspeed
