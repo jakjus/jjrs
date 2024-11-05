@@ -12,8 +12,8 @@ import { applySlowdown } from "./src/slowdown";
 import { defaults } from "./src/settings";
 import initChooser from "./src/chooser";
 import { welcomePlayer } from "./src/welcome";
-import { AsyncDatabase as Database } from "promised-sqlite3";
-import { createTables } from "./src/db";
+import { initDb } from "./src/db"
+import { getOrCreatePlayer } from "./src/db"
 
 export interface lastTouch {
   byPlayer: PlayerAugmented,
@@ -39,6 +39,7 @@ export class PlayerAugmented {
   canCallFoulUntil: number;
   afk: boolean;
   afkCounter: number;
+  elo: number;
   constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
     this.gameId = gameId
@@ -57,6 +58,7 @@ export class PlayerAugmented {
     this.fouledAt = { x: 0, y: 0 };
     this.afk = false;
     this.afkCounter = 0;
+    this.elo = 1200;
   }
   get position() { return room.getPlayer(this.id).position }
 }
@@ -133,7 +135,6 @@ export let toAug = (p: PlayerObject) => {
   }
   return found
 }
-export let db: any;
 export let room: RoomObject;
 export let game: Game | null;
 
@@ -144,14 +145,8 @@ export let game: Game | null;
 //})
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
-  //db = await Database.open('db.sqlite')
-  //try {
-  //  console.log('Creating DB...')
-  //  await createTables(db)
-  //} catch (e) {
-  //  console.log('\nDB tables already created.')
-  //}
   room = HBInit(args)
+  const db = await initDb()
   const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(5)
@@ -210,7 +205,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         players.filter(p => p.team == 1 || p.team == 2).forEach(p => {
           p.afkCounter += 1;
           if (p.afkCounter == 18) {
-            sendMessage('Move! You will be AFK in 5 seconds...')
+            sendMessage('Move! You will be AFK in 5 seconds...', p)
           } else if (p.afkCounter > 23) {
             p.afkCounter = 0
             room.setPlayerTeam(p.id, 0)
@@ -235,7 +230,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         room.kickPlayer(p.id, "You are already on the server.", false)
       }
     }
-    //await db.run('UPDATE players SET name=? WHERE auth=?', [p.name, p.auth])
     welcomePlayer(room, p)
     room.setPlayerAvatar(p.id, "")
     let newPlayer = new PlayerAugmented(p)
@@ -248,6 +242,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       game.currentPlayers.push(newPlayer)
     }
     players.push(newPlayer)
+    const readPlayer = await getOrCreatePlayer(p)
+    newPlayer.elo = readPlayer.elo
+    await db.run('UPDATE players SET name=? WHERE auth=?', [p.name, p.auth])
   }
 
   room.onPlayerLeave = async p => {

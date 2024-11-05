@@ -1,10 +1,12 @@
-import { room, players } from "..";
+import { room, players, PlayerAugmented } from "..";
 import { sendMessage } from "./message";
 import { game } from "..";
 import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
 import { teamSize } from "./settings";
+import { calculateAndExec } from "hax-standard-elo";
+import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
 
 const maxTeamSize = process.env.DEBUG ? 2 : teamSize
 let isRunning: boolean = false;
@@ -98,6 +100,18 @@ const initChooser = (room: RoomObject) => {
 			_onTeamVictory(scores)
 		}
 		if (isRanked) {
+			if (!game) { return }
+			const getEloOfPlayer = async (playerId: number) => {
+				const p = game?.currentPlayers.find(p => p.id == playerId)
+				if (!p) { console.log('Error finding players for ELO calculation with ID ', playerId); return 1200 }
+				const res = await getOrCreatePlayer(p)
+				return res.elo
+			}
+
+
+
+			calculateAndExec(room, getEloOfPlayer, changeEloOfPlayer, undefined, game.currentPlayers)
+
 			sendMessage('It was ranked game, but ELO is not handled in this version.')
 		}
 		const winTeam = scores.red > scores.blue ? 1 : 2

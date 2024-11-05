@@ -1,34 +1,7 @@
-import { room, db, PlayerAugmented } from "../index"
+import { room, PlayerAugmented } from "../index"
+import { db } from "./db";
 
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-export const isInGame = (p: PlayerObject) => p.team == 1 || p.team == 2
-
-interface ReadPlayer {
-  id: number,
-  name: string,
-  points: number,
-}
-
-export const getOrCreatePlayer = async (p: PlayerAugmented): Promise<ReadPlayer> => {
-  const auth = p.auth 
-  const playerInDb = await db.get('SELECT * FROM players WHERE auth=?', [auth])
-  if (!playerInDb) {
-      const res = await db.run('INSERT INTO players(auth, name, points) VALUES (?, ?, ?)', [p.auth, p.name, 0]) 
-      const newPlayer = { id: res.lastID, name: p.name, points: 0 }
-      return newPlayer
-  }
-  return playerInDb
-}
-
-export const getStats = async (p: PlayerAugmented) => {
-  const playerInDb = await getOrCreatePlayer(p)
-  const stats = await db.get('SELECT * FROM stats WHERE playerId=?', [playerInDb.id])
-  if (!stats) {
-    await db.run('INSERT INTO stats(playerId, mapSlug) VALUES (?)', [playerInDb.id])
-    return { playerId: playerInDb.id }
-  }
-  return stats
-}
 
 export const setStats = async (p: PlayerAugmented, key: string, value: any): Promise<void> => {
   const auth = p.auth
