@@ -196,7 +196,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         game.applySlowdown()
       }
 
-      if (!duringDraft) {
+      if (!duringDraft && !process.env.DEBUG) {
         j++;
       }
 
