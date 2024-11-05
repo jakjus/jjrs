@@ -210,7 +210,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         players.filter(p => p.team == 1 || p.team == 2).forEach(p => {
           p.afkCounter += 1;
           if (p.afkCounter == 18) {
-            sendMessage('Move! You will be AFK in 5 seconds...')
+            sendMessage('Move! You will be AFK in 5 seconds...', p)
           } else if (p.afkCounter > 23) {
             p.afkCounter = 0
             room.setPlayerTeam(p.id, 0)
