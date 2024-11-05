@@ -62,10 +62,6 @@ const handleWin = async (game: Game) => {
 			toAug(room.getPlayer(co.playerId)).elo += co.change  // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
 		}
 	})
-
-
-	sendMessage('It was ranked game, but ELO is not handled in this version.')
-
 }
 const red = () => room.getPlayerList().filter(p => p.team == 1)
 const blue = () => room.getPlayerList().filter(p => p.team == 2)
