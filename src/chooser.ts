@@ -1,6 +1,6 @@
 import { room, players, PlayerAugmented } from "..";
 import { sendMessage } from "./message";
-import { game } from "..";
+import { game, Game } from "..";
 import { sleep } from "./utils";
 import * as fs from 'fs';
 import { toAug } from "..";
@@ -8,10 +8,65 @@ import { teamSize } from "./settings";
 import { calculateChanges, execChanges } from "hax-standard-elo";
 import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
 
-const maxTeamSize = process.env.DEBUG ? 1 : teamSize
+const maxTeamSize = process.env.DEBUG ? 2 : teamSize
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 export let duringDraft: boolean = false;
+
+const balanceTeams = () => {
+	if (duringDraft || isRanked) {
+		return
+	}
+	// To be used only during unranked
+	if (red().length > blue().length+1) {
+		room.setPlayerTeam(red()[0].id, 2)
+	} else if (red().length+1 < blue().length) {
+		room.setPlayerTeam(blue()[0].id, 1)
+	}
+}
+
+export const handlePlayerLeaveOrAFK = async (p: PlayerAugmented) => {
+		await sleep(100)
+		if (!duringDraft && !isRanked) {
+			balanceTeams()
+		}
+		if (isRanked) {
+			if ([...red(), ...blue()].length <= 2) {
+				isRanked = false
+				sendMessage('Only 2 players left. Cancelling ranked game.')
+			}
+		}
+
+}
+
+const handleWin = async (game: Game) => {
+	const getEloOfPlayer = async (playerId: number) => {
+		const p = game.currentPlayers.find(p => p.id == playerId)
+		if (!p) { console.log('Error finding players for ELO calculation with ID ', playerId); return 1200 }
+		const res = await getOrCreatePlayer(p)
+		return res.elo
+	}
+
+	const changes = await calculateChanges(room, getEloOfPlayer, game.currentPlayers)
+	console.log('changes', changes)
+	changes.forEach(co => {
+		const p = room.getPlayer(co.playerId)
+		if (p) {
+			sendMessage(`Your ELO: ${toAug(p).elo} → ${toAug(p).elo+co.change} (${co.change > 0 ? '+': ''}${co.change})`, p)
+		}
+	})
+
+	await execChanges(changes, getEloOfPlayer, changeEloOfPlayer)
+	changes.forEach(co => {
+		if (players.map(p => p.id).includes(co.playerId)) {
+			toAug(room.getPlayer(co.playerId)).elo += co.change  // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
+		}
+	})
+
+
+	sendMessage('It was ranked game, but ELO is not handled in this version.')
+
+}
 const red = () => room.getPlayerList().filter(p => p.team == 1)
 const blue = () => room.getPlayerList().filter(p => p.team == 2)
 const spec = () => room.getPlayerList().filter(p => p.team == 0)
@@ -36,17 +91,6 @@ export const addToGame = (room: RoomObject, p: PlayerObject) => {
 }
 
 const initChooser = (room: RoomObject) => {
-	const balanceTeams = () => {
-		if (duringDraft || isRanked) {
-			return
-		}
-		// To be used only during unranked
-		if (red().length > blue().length+1) {
-			room.setPlayerTeam(red()[0].id, 2)
-		} else if (red().length+1 < blue().length) {
-			room.setPlayerTeam(blue()[0].id, 1)
-		}
-	}
 
 	const refill = () => {
 		const specs = spec().filter(p => !toAug(p).afk)
@@ -66,14 +110,7 @@ const initChooser = (room: RoomObject) => {
 
 	const _onPlayerLeave = room.onPlayerLeave
 	room.onPlayerLeave = async p => {
-		await sleep(100)
-		if (!isEnoughPlayers() && !duringDraft) {
-			if (isRanked) {
-				sendMessage('Not enough players. Unranked game.')
-			}
-			isRanked = false
-			balanceTeams()
-		}
+		await handlePlayerLeaveOrAFK(toAug(p))
 		_onPlayerLeave(p)
 	}
 
@@ -87,6 +124,18 @@ const initChooser = (room: RoomObject) => {
 			game.inPlay = false
 			game.positionsDuringPass = []
 			players.forEach(p => p.canCallFoulUntil = 0)
+			game.eventCounter += 1
+			if (isRanked && !duringDraft) {
+				const evC = game.eventCounter
+				const gameId = game.id
+				const dirKick = team == 1 ? -1 : 1
+				setTimeout(() => {
+					if (room.getBallPosition()?.x == 0 && room.getBallPosition()?.y == 0 && game?.eventCounter == evC && game?.id == gameId) {
+						room.setDiscProperties(0, {xspeed: dirKick*3, yspeed: Math.random()})
+						sendMessage('Ball was not touched for 35 seconds, therefore it is moved automatically.')
+					}
+				}, 35000)
+			}
 		}
 		_onTeamGoal(team)
 	}
@@ -101,32 +150,7 @@ const initChooser = (room: RoomObject) => {
 		}
 		if (isRanked) {
 			if (!game) { return }
-			const getEloOfPlayer = async (playerId: number) => {
-				const p = game?.currentPlayers.find(p => p.id == playerId)
-				if (!p) { console.log('Error finding players for ELO calculation with ID ', playerId); return 1200 }
-				const res = await getOrCreatePlayer(p)
-				return res.elo
-			}
-
-
-			const changes = await calculateChanges(room, getEloOfPlayer, game.currentPlayers)
-			console.log('changes', changes)
-			changes.forEach(co => {
-				const p = room.getPlayer(co.playerId)
-				if (p) {
-					sendMessage(`Your ELO: ${toAug(p).elo} → ${toAug(p).elo+co.change} (${co.change > 0 ? '+': ''}${co.change})`, p)
-				}
-			})
-
-			await execChanges(changes, getEloOfPlayer, changeEloOfPlayer)
-			changes.forEach(co => {
-				if (players.map(p => p.id).includes(co.playerId)) {
-					toAug(room.getPlayer(co.playerId)).elo += co.change  // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
-				}
-			})
-
-
-			sendMessage('It was ranked game, but ELO is not handled in this version.')
+			await handleWin(game)
 		}
 		const winTeam = scores.red > scores.blue ? 1 : 2
 		const loseTeam = scores.red > scores.blue ? 2 : 1
@@ -358,7 +382,7 @@ const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds
 			// fill empty spots with other
 			const red = [...playersInZone(redZone), redPicker]
 			const blue = [...playersInZone(blueZone), bluePicker]
-			room.getPlayerList().filter(p => ![...red, ...blue].map(pp => pp.id).includes(p.id)).forEach(p => afkHandler(p))
+			room.getPlayerList().filter(p => ![...red, ...blue, ...playersInZone(midZone)].map(pp => pp.id).includes(p.id)).forEach(p => afkHandler(p))
 			room.stopGame()
 			sendMessage('Draft finished.')
 			return { red, blue }

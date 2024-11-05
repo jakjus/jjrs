@@ -1,6 +1,6 @@
 import { sendMessage } from "./message"
 import { room, PlayerAugmented } from "../index"
-import { addToGame } from "./chooser";
+import { addToGame, handlePlayerLeaveOrAFK } from "./chooser";
 import config from "../config"
 
 export const isCommand = (msg: string) => msg.trim().startsWith("!")
@@ -29,6 +29,7 @@ const setAfk = (p: PlayerAugmented) => {
     p.afk = true
     room.setPlayerTeam(p.id, 0)
     sendMessage('You are now AFK.', p)
+    handlePlayerLeaveOrAFK(p)
 }
 
 const setBack = (p: PlayerAugmented) => {
