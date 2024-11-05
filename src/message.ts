@@ -51,5 +51,5 @@ export const playerMessage = async (p: PlayerAugmented, msg: string) => {
         sendMessage(`You are AFK. Write "!back" to come back.`, p)
     }
     const card = p.cardsAnnounced < 1 ? `` : p.cardsAnnounced < 2 ? `🟨 ` : `🟥 `
-    room.sendAnnouncement(`[${p.elo}] ${card}${p.name}: ${msg}`, undefined, blendColorsInt(0x454545, 0xfff6e0, percentage(p.elo)*100), "normal", 1)
+    room.sendAnnouncement(`[${p.elo}] ${card}${p.name}: ${msg}`, undefined, blendColorsInt(0x636363, 0xfff7f2, percentage(p.elo)*100), "normal", 1)
 }

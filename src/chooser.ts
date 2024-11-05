@@ -161,7 +161,7 @@ const initChooser = (room: RoomObject) => {
 			const rd = ready()
 			duringDraft = true
 			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
-			const draftResult = await performDraft(room, rd, winnerIds, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
+			const draftResult = await performDraft(room, rd, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
 			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)
 			room.getPlayerList().forEach(p => {
@@ -205,17 +205,11 @@ const initChooser = (room: RoomObject) => {
 	//room.onPlayerLeave
 }
 
-const performDraft = async (room: RoomObject, players: PlayerObject[], pickerIds: number[], maxTeamSize: number, afkHandler: Function) => {
+const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSize: number, afkHandler: Function) => {
 			room.stopGame()
 			players.forEach(p => room.setPlayerTeam(p.id, 0))
-			if (pickerIds) {
-				players.forEach((p, i) => {
-					if (pickerIds.includes(p.id)){
-						players.unshift(players.splice(i, 1)[0])
-					}
-				})
-			}
 			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
+			players = players.sort((a, b) => toAug(b).elo - toAug(a).elo)
 			room.setCustomStadium(draftMap)
 			// set blue players kickable (kicking them by red players results in
 			// choose)
