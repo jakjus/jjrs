@@ -7,6 +7,7 @@ import { sleep } from "./utils"
 import { isPenalty } from "./foul"
 
 export const checkAllX = (game: Game) => {
+	if (!game.inPlay) { return }
 	players.filter(p => p.team != 0)
 	.forEach(pp => {
 		const props = room.getPlayerDiscProperties(pp.id)

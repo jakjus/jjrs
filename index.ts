@@ -201,7 +201,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         game.applySlowdown()
       }
 
-      if (duringDraft) {
+      if (!duringDraft) {
         j++;
       }
 
@@ -241,11 +241,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     let newPlayer = new PlayerAugmented(p)
     if (game) {
       const found = game.currentPlayers.find(pp => pp.auth == p.auth)
-      console.log('found is', found)
       if (found && found.gameId == gameId) {
         game.currentPlayers = game.currentPlayers.filter(ppp => ppp.auth != p.auth)
         newPlayer = new PlayerAugmented({ ...p, foulsMeter: found.foulsMeter, cardsAnnounced: found.foulsMeter, slowdown: found.slowdown, slowdownUntil: found.slowdownUntil })
-        console.log('newplayer is ', newPlayer)
       }
       game.currentPlayers.push(newPlayer)
     }
@@ -254,7 +252,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onPlayerLeave = async p => {
     players = players.filter(pp => p.id != pp.id)
-    if (players.length < 2) {
+    if (players.filter(p => !p.afk).length < 2) {
       room.stopGame()
       room.startGame()
     }
