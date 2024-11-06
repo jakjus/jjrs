@@ -129,7 +129,7 @@ export class Game {
     checkAllX(this);
   }
   checkFoul() {
-    checkFoul(this);
+    checkFoul();
   }
   applySlowdown() {
     applySlowdown();

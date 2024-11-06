@@ -6,7 +6,7 @@ export const defaults = {
   invMass: 0.4,
   ballInvMass: 1.235,
   ballRadius: 7.6,
-  playerRadius: 14,
+  playerRadius: 16,
 };
 export const colors = {
   white: 0xffffff,

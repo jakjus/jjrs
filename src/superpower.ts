@@ -105,10 +105,10 @@ const slide = async (
   });
   room.setPlayerAvatar(p.id, "👟");
   p.sliding = true;
-  await sleep(700);
+  await sleep(600);
   p.sliding = false;
   p.slowdown = 0.13;
-  p.slowdownUntil = new Date().getTime() + 1000 * 3.2;
+  p.slowdownUntil = new Date().getTime() + 1000 * 3;
   room.setPlayerAvatar(p.id, "");
 };
 

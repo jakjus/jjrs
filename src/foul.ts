@@ -14,33 +14,34 @@ export const isPenalty = (victim: PlayerAugmented) => {
   return result;
 };
 
-export const checkFoul = async (game: Game) => {
-  const red = room.getPlayerList().filter((p) => p.team == 1);
-  const blue = room.getPlayerList().filter((p) => p.team == 2);
-  red.forEach((r) => {
-    blue.forEach((b) => {
-      const dist = Math.sqrt(
-        (r.position.x - b.position.x) ** 2 + (r.position.y - b.position.y) ** 2,
-      );
-      if (dist < defaults.playerRadius * 2 + 0.1) {
-        const ar = toAug(r);
-        const ab = toAug(b);
+export const checkFoul = async () => {
+  room.getPlayerList().filter(p => p.team != 0 && toAug(p).sliding).forEach(p => {
+      const ballPos = room.getBallPosition()
 
-        if (ar.sliding && !ab.sliding) {
-          handleSlide(ar, ab);
-        }
-        if (!ar.sliding && ab.sliding) {
-          handleSlide(ab, ar);
-        }
+      const distToBall = Math.sqrt(
+        (p.position.x - ballPos.x) ** 2 + (p.position.y - ballPos.y) ** 2,
+      )
+      if (distToBall < defaults.playerRadius+defaults.ballRadius + 0.1) {
+        toAug(p).sliding = false
+        return
       }
+      const enemyTeam = p.team == 1 ? 2 : 1
+      room.getPlayerList().filter(pp => pp.team == enemyTeam).forEach(enemy => {
+        const dist = Math.sqrt(
+          (p.position.x - enemy.position.x) ** 2 + (p.position.y - enemy.position.y) ** 2,
+        )
+        if (dist < defaults.playerRadius * 2 + 0.1) {
+          handleSlide(toAug(p), toAug(enemy));
+        }
     });
   });
-};
+}
 
 const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
   if (victim.slowdown) {
     return;
   }
+  slider.sliding = false
   const sliderProps = room.getPlayerDiscProperties(slider.id);
   const victimProps = room.getPlayerDiscProperties(victim.id);
   const ballPos = room.getBallPosition();
@@ -58,8 +59,8 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
   }
   const power =
     Math.sqrt(
-      (sliderProps.xspeed - victimProps.xspeed) ** 2 +
-        (sliderProps.yspeed - victimProps.yspeed) ** 2,
+      (sliderProps.xspeed) ** 2 +
+        (sliderProps.yspeed) ** 2,
     ) * 0.8;
   const slowdown = power > 2.7 ? 0.05 * power : 0.04 * power;
   const av = power > 2.7 ? "❌" : "🩹";

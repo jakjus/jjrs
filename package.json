@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node run.ts"
+    "start": "ts-node run.ts",
+    "prof": "ts-node --prof run.ts"
   },
   "author": "Jakub Juszko",
   "license": "MIT",
