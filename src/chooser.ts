@@ -127,7 +127,7 @@ const initChooser = (room: RoomObject) => {
 				const dirKick = team == 1 ? -1 : 1
 				setTimeout(() => {
 					if (room.getBallPosition()?.x == 0 && room.getBallPosition()?.y == 0 && game?.eventCounter == evC && game?.id == gameId) {
-						room.setDiscProperties(0, {xspeed: dirKick*3, yspeed: Math.random()})
+						room.setDiscProperties(0, {xspeed: dirKick*2, yspeed: Math.random()})
 						sendMessage('Ball was not touched for 35 seconds, therefore it is moved automatically.')
 					}
 				}, 35000)
@@ -158,7 +158,7 @@ const initChooser = (room: RoomObject) => {
 			duringDraft = true
 			room.getPlayerList().forEach(p => room.setPlayerAvatar(p.id, ""))
 			const draftResult = await performDraft(room, rd, maxTeamSize, (p: PlayerObject) => toAug(p).afk = true);
-			const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
+			const rsStadium = fs.readFileSync('./maps/rs5.hbs', { encoding: 'utf8', flag: 'r' })
 			room.setCustomStadium(rsStadium)
 			room.getPlayerList().forEach(p => {
 				if (p.team != 0) {
@@ -204,7 +204,7 @@ const initChooser = (room: RoomObject) => {
 const performDraft = async (room: RoomObject, players: PlayerObject[], maxTeamSize: number, afkHandler: Function) => {
 			room.stopGame()
 			players.forEach(p => room.setPlayerTeam(p.id, 0))
-			const draftMap = fs.readFileSync('./draft.hbs', { encoding: 'utf8', flag: 'r' })
+			const draftMap = fs.readFileSync('./maps/draft.hbs', { encoding: 'utf8', flag: 'r' })
 			players = players.sort((a, b) => toAug(b).elo - toAug(a).elo)
 			room.setCustomStadium(draftMap)
 			// set blue players kickable (kicking them by red players results in

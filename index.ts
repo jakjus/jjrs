@@ -147,7 +147,7 @@ export let game: Game | null;
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args)
   const db = await initDb()
-  const rsStadium = fs.readFileSync('./rs5.hbs', { encoding: 'utf8', flag: 'r' })
+  const rsStadium = fs.readFileSync('./maps/rs5.hbs', { encoding: 'utf8', flag: 'r' })
   room.setCustomStadium(rsStadium)
   room.setTimeLimit(5)
   room.setScoreLimit(0)

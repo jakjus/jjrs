@@ -1,20 +1,18 @@
 {
-  "name": "hax-climb",
-  "version": "1.1.0",
+  "name": "jjrs",
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node run.ts",
-    "migrate": "ts-node migration/v1.0.0/migrate.ts",
-    "remove-points": "ts-node migration/other/remove_points.ts"
+    "start": "ts-node run.ts"
   },
   "author": "Jakub Juszko",
   "license": "MIT",
-  "homepage": "https://github.com/jakjus/hax-climb#readme",
+  "homepage": "https://github.com/jakjus/jjrs#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jakjus/hax-climb.git"
+    "url": "git+https://github.com/jakjus/jjrs.git"
   },
-  "description": "Haxball Room Script for Climbing Mod",
+  "description": "Haxball Room Script for Jakjus Real Soccer (JJRS)",
   "dependencies": {
     "@koush/wrtc": "^0.5.3",
     "@types/haxball-headless-browser": "^0.3.0",
