@@ -12,6 +12,7 @@
 ### 🚀 [Discord](https://discord.gg/dYk5UXs)
 
 ## Features
+
 - [x] Real Soccer Map and Draft Map
 - [x] Outs, Goal Kicks, Corners
 - [x] Fouls, Yellow and Red cards
@@ -22,7 +23,6 @@
 - [x] ELO System (SQLite database)
 - [x] Draft System - top ranked players choose their team
 - [x] Fully automatic
-
 
 ## Prerequisites
 
@@ -45,52 +45,53 @@ Rename `config.example.ts` with `config.ts`. Insert **token** from https://haxba
 // config.ts
 
 export default {
-    roomName: `🌕   JJRS v1.0 by jakjus`,
-    public: true,
-    maxPlayers: 30,
-    token: `YOUR_TOKEN_HERE`,
-}
+  roomName: `🌕   JJRS v1.0 by jakjus`,
+  public: true,
+  maxPlayers: 30,
+  token: `YOUR_TOKEN_HERE`,
+};
 ```
 
 Run Server:
+
 ```sh
 npm start
 ```
 
 ### How to play
+
 Hold and release KICK to activate superpower. Release on correct emoji to activate chosen power.
 
 - 👟 Slide/Superkick
   - [When not next to the ball] Slide: Slide in chosen direction.
-  If you touch an enemy player, he will be fouled.
+    If you touch an enemy player, he will be fouled.
   - [When very close to the ball, but not touching the ball] Superkick:
     Kick the ball strongly and with rotation. The closer to the ball
-  (but not touching it), the stronger the shot. Rotation and strength
-  also depends on
-  player movement.
+    (but not touching it), the stronger the shot. Rotation and strength
+    also depends on
+    player movement.
 - 💨 Sprint: Sprint in chosen direction
 - 🩹 Call Foul: If you are fouled, you have short time to call foul by
-holding KICK. If you do not use it, the game goes on (privilege of
-benefit).
-
+  holding KICK. If you do not use it, the game goes on (privilege of
+  benefit).
 
 ### Settings
+
 Some script settings can be changed in `src/settings.ts`. Also, if you
 change RS map physics, you should update settings values in
 `src/settings.ts`.
-
 
 ## Author
 
 👤 **Jakub Juszko**
 
-* Website: https://jakjus.com
-* Github: [@jakjus](https://github.com/jakjus)
-* LinkedIn: [@jakubjuszko](https://linkedin.com/in/jakubjuszko)
+- Website: https://jakjus.com
+- Github: [@jakjus](https://github.com/jakjus)
+- LinkedIn: [@jakubjuszko](https://linkedin.com/in/jakubjuszko)
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/jakjus/hax-climb/issues). 
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/jakjus/hax-climb/issues).
 
 ## Show your support
 
@@ -101,4 +102,4 @@ Give a ⭐️ if this project helped you!
 Copyright © 2024 [Jakub Juszko](https://github.com/jakjus).<br />
 This project is [MIT](https://github.com/jakjus/hax-climb/blob/master/LICENSE) licensed.
 
-***
+---
