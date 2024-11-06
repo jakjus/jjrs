@@ -16,6 +16,7 @@
 - [x] Outs, Goal Kicks, Corners
 - [x] Fouls, Yellow and Red cards
 - [x] Free Kicks, Penalties
+- [x] Offsides
 - [x] Natural outs and ball passes
 - [x] Slide, Sprint, Superkick
 - [x] ELO System (SQLite database)
