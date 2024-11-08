@@ -374,18 +374,24 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       game.lastKick = p
       setBallInvMassAndColor(game)
 
-      //if (game.rotateNextKick) {
-        const props = room.getPlayerDiscProperties(p.id);
-        const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
-        const vecXsp = props.xspeed / spMagnitude;
-        const vecYsp = props.yspeed / spMagnitude;
+      const props = room.getPlayerDiscProperties(p.id);
+      const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
+      const vecXsp = props.xspeed / spMagnitude;
+      const vecYsp = props.yspeed / spMagnitude;
 
+      game.ballRotation = {
+        x: -vecXsp,
+        y: -vecYsp,
+        power: spMagnitude ** 0.5 * 8,
+      };
+      if (game.rotateNextKick) {
         game.ballRotation = {
           x: -vecXsp,
           y: -vecYsp,
-          power: spMagnitude ** 0.5 * 10,
+          power: spMagnitude ** 0.5 * 12,
         };
-        //game.rotateNextKick = false;
+      }
+      game.rotateNextKick = false;
         //room.setDiscProperties(0, { invMass: defaults.ballInvMass });
       //}
 

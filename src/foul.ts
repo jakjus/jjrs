@@ -62,7 +62,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
       (sliderProps.xspeed) ** 2 +
         (sliderProps.yspeed) ** 2,
     ) * 0.6;
-  const slowdown = power > 2.7 ? 0.05 * power : 0.04 * power;
+  const slowdown = power > 2.9 ? 0.045 * power : 0.04 * power;
   const av = power > 2.7 ? "❌" : "🩹";
   room.setPlayerAvatar(victim.id, av);
   victim.slowdown = slowdown;
