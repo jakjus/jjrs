@@ -130,8 +130,9 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
   });
   //await sleep(100)
   room.pauseGame(true);
-  await sleep(6000);
+  await sleep(4000);
   room.pauseGame(false);
+  await sleep(1000);
   if (!room.getScores() || duringDraft || game.id != currentGameId) {
     return;
   }

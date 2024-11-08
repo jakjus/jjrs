@@ -239,7 +239,6 @@ const throwIn = async (
     return;
   } // if no game or next game started
   if (game && ((game.id != currentGameId) || (game.eventCounter != savedEventCounter))) {
-    room.setDiscProperties(0, {x:0,y:0})
     return
   } // if next game started but its still on out
   const newForTeam = forTeam == 1 ? 2 : 1;
@@ -253,6 +252,7 @@ export const freeKick = async (
 ) => {
   announceCards(game);
   room.pauseGame(true);
+  room.pauseGame(false);
   game.eventCounter += 1;
   const savedEventCounter = game.eventCounter;
   throwRealBall(game, forTeam, pos, savedEventCounter);
@@ -278,7 +278,6 @@ export const freeKick = async (
       room.setPlayerDiscProperties(p.id, { invMass: 1000000 });
     });
   await sleep(100);
-  room.pauseGame(false);
   game.rotateNextKick = true;
 
   const r = await blink(game, savedEventCounter, forTeam);
@@ -505,6 +504,7 @@ export const penalty = async (
       });
     });
   room.pauseGame(true);
+  room.pauseGame(false);
   room
     .getPlayerList()
     .filter((p) => p.team != 0 && p.id != gk?.id && p.id != shooter?.id)
@@ -543,7 +543,6 @@ export const penalty = async (
   }
 
   await sleep(100);
-  room.pauseGame(false);
   game.rotateNextKick = true;
 
   const r = await blink(game, savedEventCounter, forTeam);
