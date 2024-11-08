@@ -67,10 +67,15 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
     return;
   }
 
+  if (room.getPlayerList().filter(p => p.team !=0).length <= 6) {
+    sendMessage('❌🚩 NO OFFSIDE with 6 players or below.')
+    return
+  }
+
   // its offside
   game.inPlay = false;
   game.eventCounter += 1;
-  sendMessage("Offside.");
+  sendMessage("🚩 Offside.");
   const osPlace = receiverDuringPass.position;
   const allPosNow = room.getPlayerList().filter((p) => p.team != 0);
   const ballNow = room.getBallPosition();

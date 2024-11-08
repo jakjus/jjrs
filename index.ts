@@ -166,7 +166,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   });
   room.setCustomStadium(rsStadium);
   room.setTimeLimit(5);
-  room.setScoreLimit(0);
+  room.setScoreLimit(3);
   if (process.env.DEBUG) {
     room.setScoreLimit(1);
     room.setTimeLimit(1);
