@@ -7,7 +7,7 @@ import {
   secondBallId,
   thirdBallId,
 } from "./settings";
-import { sleep } from "./utils";
+import { setBallInvMassAndColor, sleep } from "./utils";
 import { announceCards } from "./foul";
 import { penaltyPoint } from "./settings";
 
@@ -381,6 +381,7 @@ const throwRealBall = async (
   game.inPlay = false;
   game.ballRotation = { x: 0, y: 0, power: 0 };
   game.boostCount = 0
+  setBallInvMassAndColor(game)
   const xPushOutOfSight =
     Math.abs(toPos.x) > mapBounds.x - 5
       ? Math.sign(toPos.x) * (mapBounds.x + 250)
