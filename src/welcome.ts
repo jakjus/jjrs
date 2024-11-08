@@ -8,7 +8,7 @@ export const welcomePlayer = (room: RoomObject, p: PlayerObject) => {
     p,
   );
   sendMessage(
-    `Hold "X" shorter to activate slide/finesse kick. Hold "X" longer to sprint.`,
+    `Hold "X" shorter to activate slide. Hold "X" longer to sprint. Passes within team make ball kicks stronger.`,
     p,
   );
   sendMessage(`Discord: https://discord.gg/Frg8Cr8UQb`, p);

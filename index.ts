@@ -1,6 +1,7 @@
 import { Headless } from "haxball.js";
 import { sendMessage } from "./src/message";
 import { duringDraft } from "./src/chooser";
+import { setBallInvMassAndColor } from "./src/utils";
 import { isCommand, handleCommand } from "./src/command";
 import { playerMessage } from "./src/message";
 import {
@@ -76,11 +77,13 @@ export class Game {
   animation: boolean;
   eventCounter: number;
   lastTouch: lastTouch | null;
+  lastKick: PlayerObject | null;
   ballRotation: { x: number; y: number; power: number };
   positionsDuringPass: PlayerObject[];
   skipOffsideCheck: boolean;
   currentPlayers: PlayerAugmented[];
   rotateNextKick: boolean;
+  boostCount: number;
 
   constructor() {
     gameId += 1;
@@ -88,13 +91,14 @@ export class Game {
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
+    this.lastKick = null;
     this.animation = false;
     this.ballRotation = { x: 0, y: 0, power: 0 };
     this.positionsDuringPass = [];
     this.skipOffsideCheck = false;
     this.currentPlayers = [...players]; // used to keep track on leavers in case they reconnect with red card or injury
     this.rotateNextKick = false;
-    //this.state = "play";
+    this.boostCount = 0;
   }
   rotateBall() {
     rotateBall(this);
@@ -187,7 +191,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   let i = 0;
   let j = 0;
-  room.onTeamGoal = (team) => {};
+  room.onTeamGoal = (team) => {
+  };
 
   room.onGameTick = () => {
     if (!game) {
@@ -349,6 +354,26 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerBallKick = (p) => {
     if (game) {
       const pp = toAug(p);
+
+      // Teamplay boost. Ball is lighter (kicks are stronger)
+      // depending on within team pass streak.
+      if (game.lastKick?.team === p.team) {
+        game.boostCount += 1
+        const team = p.team == 1 ? 'Red' : 'Blue'
+        if (game.boostCount == 5) {
+          sendMessage(`🔥  ${team} team has set the ball on FIRE.`)
+        } else if (game.boostCount == 8) {
+          sendMessage(`🔥🔥🔥    ${team} team is INSANE!`)
+
+        } else if (game.boostCount > 10) {
+          sendMessage(`🚀🚀🚀    ${team} team is GODLIKE!`)
+        }
+      } else {
+        game.boostCount = 0
+      }
+      game.lastKick = p
+      setBallInvMassAndColor(game)
+
       if (game.rotateNextKick) {
         const props = room.getPlayerDiscProperties(p.id);
         const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
@@ -369,6 +394,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         pp.activation = 0;
         room.setPlayerAvatar(p.id, "");
       }
+
     }
   };
 

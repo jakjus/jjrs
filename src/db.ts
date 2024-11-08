@@ -32,7 +32,7 @@ export const changeEloOfPlayer = async (playerId: number, change: number) => {
 export const initDb = async () => {
   db = await Database.open("db.sqlite");
   // Uncomment for DB SQL Debug:
-  db.inner.on("trace", (sql: any) => console.log("[TRACE]", sql));
+  //db.inner.on("trace", (sql: any) => console.log("[TRACE]", sql));
   try {
     console.log("Creating DB...");
     await createTables(db);

@@ -18,7 +18,7 @@ export const checkAllX = (game: Game) => {
         return;
       }
       // When X is PRESSED
-      if (props.damping == 0.959) {
+      if (props.damping == defaults.kickingDamping) {
         pp.activation++;
         if (
           new Date().getTime() < pp.canCallFoulUntil &&
@@ -51,7 +51,7 @@ export const checkAllX = (game: Game) => {
         // When X is RELEASED
       } else if (pp.activation > 20 && pp.activation < 60) {
         pp.activation = 0;
-        finKickOrSlide(game, pp);
+        slide(game, pp);
       } else if (pp.activation >= 60 && pp.activation < 100) {
         pp.activation = 0;
         if (pp.cooldownUntil > new Date().getTime()) {
@@ -92,27 +92,7 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
   );
 };
 
-const slide = async (
-  game: Game,
-  p: PlayerAugmented,
-  props: DiscPropertiesObject,
-) => {
-  room.setPlayerDiscProperties(p.id, {
-    xspeed: props.xspeed * 3.4,
-    yspeed: props.yspeed * 3.4,
-    xgravity: -props.xspeed * 0.026,
-    ygravity: -props.yspeed * 0.026,
-  });
-  room.setPlayerAvatar(p.id, "👟");
-  p.sliding = true;
-  await sleep(600);
-  p.sliding = false;
-  p.slowdown = 0.13;
-  p.slowdownUntil = new Date().getTime() + 1000 * 3;
-  room.setPlayerAvatar(p.id, "");
-};
-
-const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
+const slide = async (game: Game, p: PlayerAugmented) => {
   if (p.slowdown) {
     return;
   }
@@ -121,15 +101,6 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
     return;
   }
   const props = room.getPlayerDiscProperties(p.id);
-  const ball = room.getDiscProperties(0);
-  const dist = Math.sqrt((props.x - ball.x) ** 2 + (props.y - ball.y) ** 2);
-  const activationRange = 42;
-  const slideFromRange = 56;
-  setTimeout(() => room.setPlayerAvatar(p.id, ""), 700);
-  if (dist > activationRange && dist < slideFromRange) {
-    sendMessage("Too close to the ball to slide, too far to finesse kick.", p);
-    return;
-  } else if (dist >= slideFromRange) {
     if (p.cooldownUntil > new Date().getTime()) {
       sendMessage(
         `Cooldown: ${Math.ceil((p.cooldownUntil - new Date().getTime()) / 1000)}s`,
@@ -140,43 +111,20 @@ const finKickOrSlide = (game: Game, p: PlayerAugmented) => {
       setTimeout(() => room.setPlayerAvatar(p.id, ""), 200);
       return;
     }
-    slide(game, p, props);
-    p.cooldownUntil = new Date().getTime() + 18000;
-    return;
-  }
-  if (dist < defaults.ballRadius + defaults.playerRadius + 1) {
-    sendMessage("Too close to the ball.", p);
-    return;
-  }
-  room.setPlayerAvatar(p.id, "🎯");
-  game.rotateNextKick = false;
-  room.setDiscProperties(0, { invMass: defaults.ballInvMass });
-
-  const xx = ball.x - props.x;
-  const yy = ball.y - props.y;
-  const magnitude = Math.sqrt(xx ** 2 + yy ** 2);
-  const vecX = xx / magnitude;
-  const vecY = yy / magnitude;
-  const dir = { x: vecX, y: vecY };
-  const totalXspeed =
-    (dir.x + props.xspeed * 0.4) * (activationRange - dist) ** 0.2 * 4.9;
-  const totalYspeed =
-    (dir.y + props.yspeed * 0.4) * (activationRange - dist) ** 0.2 * 4.9;
-  room.setDiscProperties(0, {
-    xspeed: totalXspeed,
-    yspeed: totalYspeed,
+  room.setPlayerDiscProperties(p.id, {
+    xspeed: props.xspeed * 3.4,
+    yspeed: props.yspeed * 3.4,
+    xgravity: -props.xspeed * 0.026,
+    ygravity: -props.yspeed * 0.026,
   });
-
-  const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
-  const vecXsp = props.xspeed / spMagnitude;
-  const vecYsp = props.yspeed / spMagnitude;
-
-  game.ballRotation = {
-    x: -vecXsp,
-    y: -vecYsp,
-    power: spMagnitude * (activationRange - dist) ** 0.2 * 6,
-  };
-  handleLastTouch(game, p);
+  room.setPlayerAvatar(p.id, "👟");
+  p.sliding = true;
+  await sleep(900);
+  p.sliding = false;
+  p.slowdown = 0.13;
+  p.slowdownUntil = new Date().getTime() + 1000 * 3;
+  p.cooldownUntil = new Date().getTime() + 18000;
+  room.setPlayerAvatar(p.id, "");
 };
 
 export const rotateBall = (game: Game) => {

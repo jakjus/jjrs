@@ -380,6 +380,7 @@ const throwRealBall = async (
   game.animation = true;
   game.inPlay = false;
   game.ballRotation = { x: 0, y: 0, power: 0 };
+  game.boostCount = 0
   const xPushOutOfSight =
     Math.abs(toPos.x) > mapBounds.x - 5
       ? Math.sign(toPos.x) * (mapBounds.x + 250)
