@@ -469,7 +469,7 @@ const throwRealBall = async (
   });
   game.animation = false;
   // allow fast pass during first second, then set mass for long pass
-  await sleep(2000);
+  await sleep(1500);
   if (evCounter == game.eventCounter && !game.inPlay) {
     room.setDiscProperties(0, { invMass: toMass });
     if (toMass != defaults.ballInvMass) {

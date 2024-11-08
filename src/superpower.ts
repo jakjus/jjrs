@@ -141,5 +141,5 @@ export const rotateBall = (game: Game) => {
     xgravity: 0.01 * game.ballRotation.x * game.ballRotation.power,
     ygravity: 0.01 * game.ballRotation.y * game.ballRotation.power,
   });
-  game.ballRotation.power *= 0.96;
+  game.ballRotation.power *= 0.95;
 };

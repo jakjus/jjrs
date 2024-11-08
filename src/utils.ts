@@ -38,7 +38,7 @@ export const blendColorsInt = (color1: number, color2: number, percentage: numbe
   return combineRGB(r, g, b);
 };
 
-const boostToCoef = (game: Game) => ((1 / (1 + Math.E ** -(game.boostCount*0.2)))-0.5)*2;
+const boostToCoef = (game: Game) => ((1 / (1 + Math.E ** -(game.boostCount*0.3)))-0.5)*2;
 
 export const boostToColor = (game: Game) => blendColorsInt(0xffffff, 0xd9ce00, boostToCoef(game)*100)
 

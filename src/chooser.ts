@@ -185,9 +185,10 @@ const initChooser = (room: RoomObject) => {
       const rd = ready();
       duringDraft = true;
       room.getPlayerList().forEach((p) => room.setPlayerAvatar(p.id, ""));
+      const readyAndSorted = rd.sort((a, b) => toAug(b).elo - toAug(a).elo);
       const draftResult = await performDraft(
         room,
-        rd,
+        readyAndSorted,
         maxTeamSize,
         (p: PlayerObject) => (toAug(p).afk = true),
       );
@@ -251,7 +252,6 @@ const performDraft = async (
     encoding: "utf8",
     flag: "r",
   });
-  players = players.sort((a, b) => toAug(b).elo - toAug(a).elo);
   room.setCustomStadium(draftMap);
   // set blue players kickable (kicking them by red players results in
   // choose)
@@ -468,7 +468,7 @@ const performDraft = async (
           continue;
         }
         pickingNow = "red";
-        sendMessage("Red captain picks teammate...");
+        sendMessage(`${redPicker.name} picks teammate...`);
         sendMessage("Pick 2 players by KICKING them!", redPicker);
         setUnlock(redPicker);
         setLock(bluePicker);
