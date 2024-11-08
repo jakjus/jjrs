@@ -382,7 +382,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       game.ballRotation = {
         x: -vecXsp,
         y: -vecYsp,
-        power: spMagnitude ** 0.5 * 8,
+        power: spMagnitude ** 0.5 * 5,
       };
       if (game.rotateNextKick) {
         game.ballRotation = {
