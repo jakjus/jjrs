@@ -235,9 +235,13 @@ const throwIn = async (
   if (r) {
     return;
   }
-  if (!room.getScores() || game?.id != currentGameId) {
+  if (!room.getScores()) {
     return;
   } // if no game or next game started
+  if (game && (game.id != currentGameId)) {
+    room.setDiscProperties(0, {x:0,y:0})
+    return
+  } // if next game started but its still on out
   const newForTeam = forTeam == 1 ? 2 : 1;
   throwIn(game, newForTeam, pos);
 };
