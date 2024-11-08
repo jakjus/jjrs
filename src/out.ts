@@ -238,7 +238,7 @@ const throwIn = async (
   if (!room.getScores()) {
     return;
   } // if no game or next game started
-  if (game && (game.id != currentGameId)) {
+  if (game && ((game.id != currentGameId) || (game.eventCounter != savedEventCounter))) {
     room.setDiscProperties(0, {x:0,y:0})
     return
   } // if next game started but its still on out
@@ -290,10 +290,10 @@ export const freeKick = async (
 };
 
 export const handleBallInPlay = async (game: Game) => {
-  const props = room.getDiscProperties(0);
   if (game.animation) {
     return;
   }
+  const props = room.getDiscProperties(0);
   if (Math.abs(props.xspeed) > 0.1 || Math.abs(props.yspeed) > 0.1) {
     game.inPlay = true;
     room
@@ -468,8 +468,8 @@ const throwRealBall = async (
       room.CollisionFlags.score,
     invMass: defaults.ballInvMass,
   });
-  // allow fast pass during first second, then set mass for long pass
   game.animation = false;
+  // allow fast pass during first second, then set mass for long pass
   await sleep(2000);
   if (evCounter == game.eventCounter && !game.inPlay) {
     room.setDiscProperties(0, { invMass: toMass });
