@@ -1,10 +1,9 @@
 {
   "name": "jjrs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node run.ts",
-    "prof": "ts-node --prof run.ts"
+    "start": "ts-node run.ts"
   },
   "author": "Jakub Juszko",
   "license": "MIT",

@@ -1,6 +1,3 @@
-import { room, Game } from "..";
-import { defaults } from "./settings";
-
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const blendColorsInt = (color1: number, color2: number, percentage: number) => {
@@ -37,13 +34,4 @@ export const blendColorsInt = (color1: number, color2: number, percentage: numbe
   // Combine the blended RGB components back into an integer
   return combineRGB(r, g, b);
 };
-
-const boostToCoef = (game: Game) => ((1 / (1 + Math.E ** -(game.boostCount*0.4)))-0.5)*2;
-
-export const boostToColor = (game: Game, team?: TeamID) => blendColorsInt(0xffffff, team === 1 ? 0xd10000 : 0x0700d1, boostToCoef(game)*100)
-
-export const setBallInvMassAndColor = (game: Game, team?: TeamID) => {
-  room.setDiscProperties(0, { color: boostToColor(game, team), invMass: defaults.ballInvMass+boostToCoef(game)*1.5
-  })
-}
 

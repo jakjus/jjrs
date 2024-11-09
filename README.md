@@ -7,9 +7,9 @@
 
 > Haxball Room Script for JJRS (Jakjus Real Soccer)
 
-![Preview](./preview.png)
+![Draft System Preview](./preview.png)
 
-### 🚀 [Discord](https://discord.gg/dYk5UXs)
+### 🚀 [Discord](https://discord.gg/Frg8Cr8UQb)
 
 ## Features
 
@@ -18,8 +18,10 @@
 - [x] Fouls, Yellow and Red cards
 - [x] Free Kicks, Penalties
 - [x] Offsides
+- [x] Natural kicks (slight rotation)
 - [x] Natural outs and ball passes
-- [x] Slide, Sprint, Superkick
+- [x] Slide, Sprint
+- [x] Teamplay Bonus
 - [x] ELO System (SQLite database)
 - [x] Draft System - top ranked players choose their team
 - [x] Fully automatic
@@ -60,9 +62,10 @@ npm start
 
 ### How to play
 
+When you pass within team, ball kicks get stronger, until enemy touches it. It promotes team play.
 Hold and release KICK to activate superpower. Release on correct emoji to activate chosen power.
 
-- 👟 Slide/Superkick
+- 👟 Slide
   - [When not next to the ball] Slide: Slide in chosen direction.
     If you touch an enemy player, he will be fouled.
   - [When very close to the ball, but not touching the ball] Superkick:
@@ -80,6 +83,14 @@ Hold and release KICK to activate superpower. Release on correct emoji to activa
 Some script settings can be changed in `src/settings.ts`. Also, if you
 change RS map physics, you should update settings values in
 `src/settings.ts`.
+
+## Current state
+There are minor bugs, like synchronization issues (duplicate events that
+cause outs/freekicks happening randomly on the other side of the map) and
+major bugs (core dumped, ball disappearing, ball stuck on the out).
+
+Currently TTF (Time To Failure) is 9 hours on average, therefore it needs admin
+supervision to restart the server when necessary.
 
 ## Author
 

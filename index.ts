@@ -1,7 +1,6 @@
 import { Headless } from "haxball.js";
 import { sendMessage } from "./src/message";
 import { duringDraft } from "./src/chooser";
-import { setBallInvMassAndColor } from "./src/utils";
 import { isCommand, handleCommand } from "./src/command";
 import { playerMessage } from "./src/message";
 import {
@@ -14,11 +13,12 @@ import { handleLastTouch } from "./src/offside";
 import { checkFoul } from "./src/foul";
 import * as fs from "fs";
 import { applySlowdown } from "./src/slowdown";
-import { defaults } from "./src/settings";
 import initChooser from "./src/chooser";
 import { welcomePlayer } from "./src/welcome";
 import { initDb } from "./src/db";
 import { getOrCreatePlayer } from "./src/db";
+import { teamplayBoost } from "./src/teamplayBoost";
+import { applyRotation } from "./src/rotateBall";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -151,12 +151,6 @@ export let toAug = (p: PlayerObject) => {
 export let room: RoomObject;
 export let game: Game | null;
 
-//process.stdin.on("data", d => {
-//  const r = room
-//  const result = eval(d.toString())
-//  console.log(result)
-//})
-
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args);
   const db = await initDb();
@@ -172,22 +166,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     room.setTimeLimit(1);
   }
   room.startGame();
-
-  //room.startGame()
-  //const loop = async () => {
-  //  if (!game || !room.getScores()) {
-  //    setTimeout(loop, 1000/60)
-  //    return
-  //  }
-  //  if (game.inPlay) {
-  //    game.handleBallOutOfBounds()
-  //  } else {
-  //    game.handleBallInPlay()
-  //  }
-  //  setTimeout(loop, 1000/60)
-  //}
-
-  //loop()  // there were issues during throwIn using onGameTick loop. should be changed to onGameTick when bug is solved
 
   let i = 0;
   let j = 0;
@@ -245,9 +223,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerJoin = async (p) => {
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true);
-      //room.setPlayerTeam(p.id, 1)
-    }
-    if (!process.env.DEBUG) {
+    } else {
       if (players.map((p) => p.auth).includes(p.auth)) {
         room.kickPlayer(p.id, "You are already on the server.", false);
       }
@@ -291,13 +267,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       if (msg == "a") {
         room.setPlayerDiscProperties(p.id, { x: -10 });
       }
-      if (msg == "b") {
-        console.log(game?.currentPlayers);
-      }
-      //console.log('paug', pp)
-      //console.log('props', room.getPlayerDiscProperties(p.id))
-      //console.log('ball', room.getDiscProperties(0))
-      //console.log('game', game)
     }
 
     if (isCommand(msg)) {
@@ -354,51 +323,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerBallKick = (p) => {
     if (game) {
       const pp = toAug(p);
-
-      // Teamplay boost. Ball is lighter (kicks are stronger)
-      // depending on within team pass streak.
-      if (!game.lastKick || game.lastKick?.team === p.team) {
-        game.boostCount += 1
-        const team = p.team == 1 ? 'Red' : 'Blue'
-        const teamEmoji = p.team == 1 ? '🔴' : '🔵'
-        if (game.boostCount >= 3) {
-          sendMessage(`👏  ${teamEmoji}: ${game.boostCount} passes. (${p.name})`)
-        }
-        if (game.boostCount == 5) {
-          sendMessage(`🔥   ${team} team has set the ball on FIRE.`)
-        } else if (game.boostCount == 8) {
-          sendMessage(`🔥🔥🔥    ${team} team is INSANE!`)
-
-        } else if (game.boostCount > 10) {
-          sendMessage(`🚀🚀🚀    ${team} team is GODLIKE!`)
-        }
-      } else {
-        game.boostCount = 0
-      }
-      game.lastKick = p
-      setBallInvMassAndColor(game, p.team)
-
-      const props = room.getPlayerDiscProperties(p.id);
-      const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
-      const vecXsp = props.xspeed / spMagnitude;
-      const vecYsp = props.yspeed / spMagnitude;
-
-      game.ballRotation = {
-        x: -vecXsp,
-        y: -vecYsp,
-        power: spMagnitude ** 0.5 * 5,
-      };
-      if (game.rotateNextKick) {
-        game.ballRotation = {
-          x: -vecXsp,
-          y: -vecYsp,
-          power: spMagnitude ** 0.5 * 12,
-        };
-      }
-      game.rotateNextKick = false;
-        //room.setDiscProperties(0, { invMass: defaults.ballInvMass });
-      //}
-
+      teamplayBoost(game, p)
+      applyRotation(game, p)
       handleLastTouch(game, pp);
       if (pp.activation > 20) {
         pp.activation = 0;
