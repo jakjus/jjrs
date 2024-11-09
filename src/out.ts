@@ -10,7 +10,7 @@ import {
 import { sleep } from "./utils";
 import { announceCards } from "./foul";
 import { penaltyPoint } from "./settings";
-import { resetTeamplayBoost } from "./teamplayBoost";
+import { resetTeamplayBoost, setBallInvMassAndColor } from "./teamplayBoost";
 
 const blink = async (
   game: Game,
@@ -23,7 +23,7 @@ const blink = async (
     }
     // Cancel blink if there is another out
     if (game.inPlay || savedEventCounter != game.eventCounter) {
-      room.setDiscProperties(0, { color: colors.white });
+      //room.setDiscProperties(0, { color: colors.white });
       return true;
     }
     const blinkColor = forTeam == 1 ? colors.red : colors.blue;
@@ -301,7 +301,7 @@ export const handleBallInPlay = async (game: Game) => {
       .forEach((p) =>
         room.setPlayerDiscProperties(p.id, { invMass: defaults.invMass }),
       );
-    room.setDiscProperties(0, { color: colors.white });
+    //room.setDiscProperties(0, { color: colors.white });
     clearThrowInBlocks();
     clearCornerBlocks();
     clearGoalKickBlocks();
