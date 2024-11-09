@@ -40,10 +40,10 @@ export const blendColorsInt = (color1: number, color2: number, percentage: numbe
 
 const boostToCoef = (game: Game) => ((1 / (1 + Math.E ** -(game.boostCount*0.3)))-0.5)*2;
 
-export const boostToColor = (game: Game) => blendColorsInt(0xffffff, 0xd9ce00, boostToCoef(game)*100)
+export const boostToColor = (game: Game, team: TeamID) => blendColorsInt(0xffffff, team === 1 ? 0xd10000 : 0x0700d1, boostToCoef(game)*100)
 
-export const setBallInvMassAndColor = (game: Game) => {
-  room.setDiscProperties(0, { color: boostToColor(game), invMass: defaults.ballInvMass+boostToCoef(game)*1.5
+export const setBallInvMassAndColor = (game: Game, team: TeamID) => {
+  room.setDiscProperties(0, { color: boostToColor(game, team), invMass: defaults.ballInvMass+boostToCoef(game)*1.5
   })
 }
 

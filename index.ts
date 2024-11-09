@@ -372,7 +372,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         game.boostCount = 0
       }
       game.lastKick = p
-      setBallInvMassAndColor(game)
+      setBallInvMassAndColor(game, p.team)
 
       const props = room.getPlayerDiscProperties(p.id);
       const spMagnitude = Math.sqrt(props.xspeed ** 2 + props.yspeed ** 2);
