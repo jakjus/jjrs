@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import path from "node:path";
 import { sendMessage } from "../message";
+import { toAug } from "../..";
 import { sleep } from "../utils";
 
 /* Will be moved to separate NPM module,
@@ -182,8 +183,7 @@ export const performDraft = async (
         .getPlayerList()
         .map((p) => p.id)
         .includes(redPicker.id) ||
-      redPicker.team !== 1
-    ) {
+      toAug(redPicker).afk) {
       sendMessage("Red picker left. Changing red picker...");
       await setNewPickerRed();
     }
@@ -192,7 +192,7 @@ export const performDraft = async (
         .getPlayerList()
         .map((p) => p.id)
         .includes(bluePicker.id) ||
-      bluePicker.team !== 1
+      toAug(bluePicker).afk
     ) {
       sendMessage("Blue picker left. Changing blue picker...");
       await setNewPickerBlue();
