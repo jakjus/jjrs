@@ -1,6 +1,11 @@
 import { sendMessage } from "./message";
+import * as fs from "fs";
 import { room, PlayerAugmented } from "../index";
 import { addToGame, handlePlayerLeaveOrAFK } from "./chooser";
+import { adminPass } from "../index";
+import { performDraft } from "./draft/draft";
+import { teamSize } from "./settings";
+import { changeDuringDraft } from "./chooser";
 import config from "../config";
 
 export const isCommand = (msg: string) => msg.trim().startsWith("!");
@@ -23,7 +28,55 @@ const commands: { [key: string]: commandFunc } = {
   dc: (p) => showDiscord(p),
   bb: (p) => bb(p),
   help: (p) => showHelp(p),
+  admin: (p, args) => adminLogin(p, args),
+  draft: (p) => draft(p),
+  rs: (p) => rs(p),
 };
+
+const adminLogin = (p: PlayerAugmented, args: string[]) => {
+  if (args.length < 1) {
+    sendMessage('Usage: !admin your_admin_pass', p)
+    return
+  }
+  if (args[0] === adminPass) {
+    room.setPlayerAdmin(p.id, true)
+    sendMessage('Login successful.', p)
+  } else {
+    sendMessage('Wrong password.', p)
+  }
+}
+
+const draft = async (p: PlayerAugmented) => {
+  if (!room.getPlayer(p.id).admin) {
+    sendMessage("❌ ADMIN only command. If you're an admin, log in with !admin", p)
+    return
+  }
+  sendMessage(`${p.name} has changed map to jakjus Draft`)
+  changeDuringDraft(true)
+  const result = await performDraft(room, room.getPlayerList(), teamSize)
+  room.getPlayerList().forEach((p) => {
+    if (p.team != 0) {
+      room.setPlayerTeam(p.id, 0);
+    }
+  });
+  result?.red?.forEach((p) => room.setPlayerTeam(p.id, 1));
+  result?.blue?.forEach((p) => room.setPlayerTeam(p.id, 2));
+  changeDuringDraft(false)
+}
+
+const rs = (p: PlayerAugmented) => {
+  if (!room.getPlayer(p.id).admin) {
+    sendMessage("❌ ADMIN only command. If you're an admin, log in with !admin", p)
+    return
+  }
+  room.stopGame()
+  const rsStadium = fs.readFileSync("./maps/rs5.hbs", {
+    encoding: "utf8",
+    flag: "r",
+  });
+  room.setCustomStadium(rsStadium);
+  sendMessage(`${p.name} has changed map to JJRS`)
+}
 
 const setAfk = (p: PlayerAugmented) => {
   p.afk = true;

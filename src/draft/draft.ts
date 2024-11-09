@@ -1,6 +1,10 @@
 import * as fs from "fs";
-import { sendMessage } from "./message";
-import { sleep } from "./utils";
+import path from "node:path";
+import { sendMessage } from "../message";
+import { sleep } from "../utils";
+
+/* Will be moved to separate NPM module,
+ * therefore in a separate folder */
 
 export const performDraft = async (
   room: RoomObject,
@@ -10,7 +14,7 @@ export const performDraft = async (
 ) => {
   room.stopGame();
   players.forEach((p) => room.setPlayerTeam(p.id, 0));
-  const draftMap = fs.readFileSync("./draft.hbs", {
+  const draftMap = fs.readFileSync(path.join(__dirname, "draft.hbs"), {
     encoding: "utf8",
     flag: "r",
   });
@@ -127,7 +131,7 @@ export const performDraft = async (
           .includes(redPicker.id)
       ) {
         room.setPlayerTeam(redPicker.id, 0);
-        afkHandler(redPicker);
+        if (afkHandler) {afkHandler(redPicker)};
       }
       const midPlayers = playersInZone(midZone);
       redPicker = midPlayers[0];
@@ -150,7 +154,7 @@ export const performDraft = async (
           .includes(bluePicker.id)
       ) {
         room.setPlayerTeam(bluePicker.id, 0);
-        afkHandler(bluePicker);
+        if (afkHandler) {afkHandler(bluePicker)};
       }
       const midPlayers = playersInZone(midZone);
       bluePicker = midPlayers[0];
@@ -188,7 +192,7 @@ export const performDraft = async (
         .getPlayerList()
         .map((p) => p.id)
         .includes(bluePicker.id) ||
-      bluePicker.team !== 2
+      bluePicker.team !== 1
     ) {
       sendMessage("Blue picker left. Changing blue picker...");
       await setNewPickerBlue();
@@ -245,7 +249,6 @@ export const performDraft = async (
     }
   }
   await sleep(100); // wait for last pick to arrive in box
-  // fill empty spots with other
   const red = [...playersInZone(redZone), redPicker];
   const blue = [...playersInZone(blueZone), bluePicker];
   room

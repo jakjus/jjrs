@@ -1,5 +1,6 @@
 import { room, players, PlayerAugmented } from "..";
-import { performDraft } from "./draft";
+import * as fs from "fs";
+import { performDraft } from "./draft/draft";
 import { sendMessage } from "./message";
 import { game, Game } from "..";
 import { sleep } from "./utils";
@@ -8,10 +9,14 @@ import { teamSize } from "./settings";
 import { calculateChanges, execChanges } from "hax-standard-elo";
 import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
 
+/* This manages teams and players depending
+* on being during ranked game or draft phase. */
+
 const maxTeamSize = process.env.DEBUG ? 2 : teamSize;
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 export let duringDraft: boolean = false;
+export let changeDuringDraft = (m: boolean) => duringDraft = m
 
 const balanceTeams = () => {
   if (duringDraft || isRanked) {

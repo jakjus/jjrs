@@ -7,9 +7,10 @@ import {
   secondBallId,
   thirdBallId,
 } from "./settings";
-import { setBallInvMassAndColor, sleep } from "./utils";
+import { sleep } from "./utils";
 import { announceCards } from "./foul";
 import { penaltyPoint } from "./settings";
+import { resetTeamplayBoost } from "./teamplayBoost";
 
 const blink = async (
   game: Game,
@@ -382,9 +383,7 @@ const throwRealBall = async (
   }
   game.animation = true;
   game.inPlay = false;
-  game.ballRotation = { x: 0, y: 0, power: 0 };
-  game.boostCount = 0
-  setBallInvMassAndColor(game)
+  resetTeamplayBoost(game);
   const xPushOutOfSight =
     Math.abs(toPos.x) > mapBounds.x - 5
       ? Math.sign(toPos.x) * (mapBounds.x + 250)

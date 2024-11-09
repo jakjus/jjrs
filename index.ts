@@ -1,5 +1,4 @@
 import { Headless } from "haxball.js";
-import { sendMessage } from "./src/message";
 import { duringDraft } from "./src/chooser";
 import { isCommand, handleCommand } from "./src/command";
 import { playerMessage } from "./src/message";
@@ -16,9 +15,11 @@ import { applySlowdown } from "./src/slowdown";
 import initChooser from "./src/chooser";
 import { welcomePlayer } from "./src/welcome";
 import { initDb } from "./src/db";
-import { getOrCreatePlayer } from "./src/db";
 import { teamplayBoost } from "./src/teamplayBoost";
 import { applyRotation } from "./src/rotateBall";
+import { afk } from "./src/afk";
+import { initPlayer } from "./src/welcome";
+import * as crypto from "node:crypto";
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -150,10 +151,12 @@ export let toAug = (p: PlayerObject) => {
 };
 export let room: RoomObject;
 export let game: Game | null;
+export let db: any;
+export let adminPass: string = crypto.randomBytes(6).toString('hex');
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args);
-  const db = await initDb();
+  db = await initDb();
   const rsStadium = fs.readFileSync("./maps/rs5.hbs", {
     encoding: "utf8",
     flag: "r",
@@ -168,7 +171,6 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.startGame();
 
   let i = 0;
-  let j = 0;
   room.onTeamGoal = (team) => {
   };
 
@@ -191,33 +193,14 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         i = 0;
         game.applySlowdown();
       }
-
-      if (!duringDraft && !process.env.DEBUG) {
-        j++;
-      }
-
-      if (j > 60) {
-        j = 0;
-        players
-          .filter((p) => p.team == 1 || p.team == 2)
-          .forEach((p) => {
-            p.afkCounter += 1;
-            if (p.afkCounter == 18) {
-              sendMessage("Move! You will be AFK in 5 seconds...", p);
-            } else if (p.afkCounter > 23) {
-              p.afkCounter = 0;
-              room.setPlayerTeam(p.id, 0);
-              p.afk = true;
-            }
-          });
-      }
+      afk.onTick()
     } catch (e) {
       console.log("Error:", e);
     }
   };
 
   room.onPlayerActivity = (p) => {
-    toAug(p).afkCounter = 0;
+    afk.onActivity(p)
   };
 
   room.onPlayerJoin = async (p) => {
@@ -230,27 +213,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     }
     welcomePlayer(room, p);
     room.setPlayerAvatar(p.id, "");
-    let newPlayer = new PlayerAugmented(p);
-    if (game) {
-      const found = game.currentPlayers.find((pp) => pp.auth == p.auth);
-      if (found && found.gameId == gameId) {
-        game.currentPlayers = game.currentPlayers.filter(
-          (ppp) => ppp.auth != p.auth,
-        );
-        newPlayer = new PlayerAugmented({
-          ...p,
-          foulsMeter: found.foulsMeter,
-          cardsAnnounced: found.foulsMeter,
-          slowdown: found.slowdown,
-          slowdownUntil: found.slowdownUntil,
-        });
-      }
-      game.currentPlayers.push(newPlayer);
-    }
-    players.push(newPlayer);
-    const readPlayer = await getOrCreatePlayer(p);
-    newPlayer.elo = readPlayer.elo;
-    await db.run("UPDATE players SET name=? WHERE auth=?", [p.name, p.auth]);
+    await initPlayer(p)
   };
 
   room.onPlayerLeave = async (p) => {
@@ -336,6 +299,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onRoomLink = (url) => {
     console.log(`Room link: ${url}`);
+    console.log(`Admin Password: ${adminPass}\nLogin using: '!admin ${adminPass}'`);
   };
 
   initChooser(room); // must be called at the end

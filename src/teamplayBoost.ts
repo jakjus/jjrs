@@ -37,3 +37,9 @@ export const teamplayBoost = (game: Game, p: PlayerObject) => {
       game.lastKick = p
       setBallInvMassAndColor(game, p.team)
 }
+
+export const resetTeamplayBoost = (game: Game) => {
+  game.ballRotation = { x: 0, y: 0, power: 0 };
+  game.boostCount = 0
+  setBallInvMassAndColor(game)
+}

@@ -1,10 +1,11 @@
 import { Game, room } from "../index";
 import { PlayerAugmented } from "../index";
 import { sendMessage } from "./message";
-import { sleep, setBallInvMassAndColor } from "./utils";
+import { sleep } from "./utils";
 import { offsideDiscs, mapBounds, defaults } from "./settings";
 import { freeKick } from "./out";
 import { duringDraft } from "./chooser";
+import { setBallInvMassAndColor } from "./teamplayBoost";
 
 export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
   if (game.inPlay) {
