@@ -43,7 +43,7 @@ const boostToCoef = (game: Game) => ((1 / (1 + Math.E ** -(game.boostCount*0.3))
 export const boostToColor = (game: Game) => blendColorsInt(0xffffff, 0xd9ce00, boostToCoef(game)*100)
 
 export const setBallInvMassAndColor = (game: Game) => {
-  room.setDiscProperties(0, { color: boostToColor(game), invMass: defaults.ballInvMass+boostToCoef(game)
+  room.setDiscProperties(0, { color: boostToColor(game), invMass: defaults.ballInvMass+boostToCoef(game)*1.5
   })
 }
 

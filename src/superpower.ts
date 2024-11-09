@@ -128,7 +128,7 @@ const slide = async (game: Game, p: PlayerAugmented) => {
 };
 
 export const rotateBall = (game: Game) => {
-  if (game.ballRotation.power < 0.1) {
+  if (game.ballRotation.power < 0.02) {
     game.ballRotation.power = 0;
     room.setDiscProperties(0, {
       xgravity: 0,
