@@ -58,17 +58,17 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
     cardsFactor += 0.3;
   }
   const power =
-    Math.sqrt(
+    Math.max(Math.sqrt(
       (sliderProps.xspeed) ** 2 +
         (sliderProps.yspeed) ** 2,
-    ) * 0.6;
-  const slowdown = power > 2.9 ? 0.045 * power : 0.04 * power;
+    ) * 0.6, 0.5);
+  const slowdown = power > 2.9 ? 0.045 * power : 0.032 * power;
   const av = power > 2.7 ? "❌" : "🩹";
   room.setPlayerAvatar(victim.id, av);
   victim.slowdown = slowdown;
   victim.slowdownUntil =
     new Date().getTime() +
-    1000 * (0.07 * power ** 8 * (0.5 + 0.5 * Math.random() * Math.random()));
+    1000 * (5 ** power * (0.5 + 0.5 * Math.random() * Math.random()));
   victim.canCallFoulUntil = new Date().getTime() + 4000;
   sendMessage(
     "You have been fouled. You can call foul by holding X in the next 4 seconds.",

@@ -8,6 +8,7 @@
 > Haxball Room Script for JJRS (Jakjus Real Soccer)
 
 ![Draft System Preview](./preview.png)
+JJRS is the most advanced Real Soccer script in HaxBall.
 
 ### 🚀 [Discord](https://discord.gg/Frg8Cr8UQb)
 
@@ -65,18 +66,21 @@ npm start
 When you pass within team, ball kicks get stronger, until enemy touches it. It promotes team play.
 Hold and release KICK to activate superpower. Release on correct emoji to activate chosen power.
 
-- 👟 Slide
-  - [When not next to the ball] Slide: Slide in chosen direction.
-    If you touch an enemy player, he will be fouled.
-  - [When very close to the ball, but not touching the ball] Superkick:
-    Kick the ball strongly and with rotation. The closer to the ball
-    (but not touching it), the stronger the shot. Rotation and strength
-    also depends on
-    player movement.
+- 👟 Slide: Slide in chosen direction. If you touch an enemy player, he will be fouled.
 - 💨 Sprint: Sprint in chosen direction
 - 🩹 Call Foul: If you are fouled, you have short time to call foul by
   holding KICK. If you do not use it, the game goes on (privilege of
   benefit).
+
+### Commands
+*[NOTE] It is **not** intended do pause/stop/start games manually, as well as change
+maps (also through using commands). Most of the time it works, but the script was not
+designed to handle manual actions.*
+- `!login your_admin_pass` - login as admin. It allows you to use `!rs` and
+  `!draft`
+- `!draft` - start draft. Stopping it before end result may result in a
+in server crash.
+- `!rs` - change map to Jakjus Real Soccer
 
 ### Settings
 
