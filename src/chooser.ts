@@ -62,7 +62,6 @@ const handleWin = async (game: Game) => {
     getEloOfPlayer,
     game.currentPlayers,
   );
-  console.log("changes", changes);
   changes.forEach((co) => {
     const p = room.getPlayer(co.playerId);
     if (p) {
