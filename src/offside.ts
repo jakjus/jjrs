@@ -16,6 +16,7 @@ export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
   }
   if (game.lastKick?.team !== p.team) {
     game.boostCount = 0
+    game.lastKick = null
     setBallInvMassAndColor(game)
   }
   savePositionsOnTouch(game);

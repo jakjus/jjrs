@@ -357,11 +357,15 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
       // Teamplay boost. Ball is lighter (kicks are stronger)
       // depending on within team pass streak.
-      if (game.lastKick?.team === p.team) {
+      if (!game.lastKick || game.lastKick?.team === p.team) {
         game.boostCount += 1
         const team = p.team == 1 ? 'Red' : 'Blue'
+        const teamEmoji = p.team == 1 ? '🔴' : '🔵'
+        if (game.boostCount >= 3) {
+          sendMessage(`👏  ${teamEmoji}: ${game.boostCount} passes. (${p.name})`)
+        }
         if (game.boostCount == 5) {
-          sendMessage(`🔥  ${team} team has set the ball on FIRE.`)
+          sendMessage(`🔥   ${team} team has set the ball on FIRE.`)
         } else if (game.boostCount == 8) {
           sendMessage(`🔥🔥🔥    ${team} team is INSANE!`)
 
