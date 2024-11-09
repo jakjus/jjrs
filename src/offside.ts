@@ -15,7 +15,7 @@ export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
       checkOffside(game, p);
     }
   }
-  if (game.lastKick?.team !== p.team) {
+  if (game.lastKick?.team !== p.team && game.inPlay) {
     game.boostCount = 0
     game.lastKick = null
     setBallInvMassAndColor(game)
