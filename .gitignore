@@ -2,3 +2,4 @@ node_modules
 *.sqlite
 config.ts
 .DS_Store
+dist
