@@ -15,33 +15,40 @@ export const isPenalty = (victim: PlayerAugmented) => {
 };
 
 export const checkFoul = async () => {
-  room.getPlayerList().filter(p => p.team != 0 && toAug(p).sliding).forEach(p => {
-      const ballPos = room.getBallPosition()
+  room
+    .getPlayerList()
+    .filter((p) => p.team != 0 && toAug(p).sliding)
+    .forEach((p) => {
+      const ballPos = room.getBallPosition();
 
       const distToBall = Math.sqrt(
         (p.position.x - ballPos.x) ** 2 + (p.position.y - ballPos.y) ** 2,
-      )
-      if (distToBall < defaults.playerRadius+defaults.ballRadius + 0.1) {
-        toAug(p).sliding = false
-        return
+      );
+      if (distToBall < defaults.playerRadius + defaults.ballRadius + 0.1) {
+        toAug(p).sliding = false;
+        return;
       }
-      const enemyTeam = p.team == 1 ? 2 : 1
-      room.getPlayerList().filter(pp => pp.team == enemyTeam).forEach(enemy => {
-        const dist = Math.sqrt(
-          (p.position.x - enemy.position.x) ** 2 + (p.position.y - enemy.position.y) ** 2,
-        )
-        if (dist < defaults.playerRadius * 2 + 0.1) {
-          handleSlide(toAug(p), toAug(enemy));
-        }
+      const enemyTeam = p.team == 1 ? 2 : 1;
+      room
+        .getPlayerList()
+        .filter((pp) => pp.team == enemyTeam)
+        .forEach((enemy) => {
+          const dist = Math.sqrt(
+            (p.position.x - enemy.position.x) ** 2 +
+              (p.position.y - enemy.position.y) ** 2,
+          );
+          if (dist < defaults.playerRadius * 2 + 0.1) {
+            handleSlide(toAug(p), toAug(enemy));
+          }
+        });
     });
-  });
-}
+};
 
 const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
   if (victim.slowdown) {
     return;
   }
-  slider.sliding = false
+  slider.sliding = false;
   const sliderProps = room.getPlayerDiscProperties(slider.id);
   const victimProps = room.getPlayerDiscProperties(victim.id);
   const ballPos = room.getBallPosition();
@@ -57,11 +64,10 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
   if (isPenalty(victim)) {
     cardsFactor += 0.3;
   }
-  const power =
-    Math.max(Math.sqrt(
-      (sliderProps.xspeed) ** 2 +
-        (sliderProps.yspeed) ** 2,
-    ) * 0.6, 0.5);
+  const power = Math.max(
+    Math.sqrt(sliderProps.xspeed ** 2 + sliderProps.yspeed ** 2) * 0.6,
+    0.5,
+  );
   const slowdown = power > 2.9 ? 0.045 * power : 0.032 * power;
   const av = power > 2.7 ? "❌" : "🩹";
   room.setPlayerAvatar(victim.id, av);

@@ -16,9 +16,9 @@ export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
     }
   }
   if (game.lastKick?.team !== p.team && game.inPlay) {
-    game.boostCount = 0
-    game.lastKick = null
-    setBallInvMassAndColor(game)
+    game.boostCount = 0;
+    game.lastKick = null;
+    setBallInvMassAndColor(game);
   }
   savePositionsOnTouch(game);
   const ballPos = room.getBallPosition();
@@ -73,9 +73,9 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
     return;
   }
 
-  if (room.getPlayerList().filter(p => p.team !=0).length <= 6) {
-    sendMessage('❌🚩 NO OFFSIDE with 6 players or below.')
-    return
+  if (room.getPlayerList().filter((p) => p.team != 0).length <= 6) {
+    sendMessage("❌🚩 NO OFFSIDE with 6 players or below.");
+    return;
   }
 
   // its offside

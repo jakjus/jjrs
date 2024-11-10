@@ -21,7 +21,7 @@ const blink = async (
     if (!room.getScores()) {
       return;
     }
-    game.animation = false
+    game.animation = false;
     // Cancel blink if there is another out
     if (game.inPlay || savedEventCounter != game.eventCounter) {
       //room.setDiscProperties(0, { color: colors.white });
@@ -240,8 +240,11 @@ const throwIn = async (
   if (!room.getScores()) {
     return;
   } // if no game or next game started
-  if (game && ((game.id != currentGameId) || (game.eventCounter != savedEventCounter))) {
-    return
+  if (
+    game &&
+    (game.id != currentGameId || game.eventCounter != savedEventCounter)
+  ) {
+    return;
   } // if next game started but its still on out
   const newForTeam = forTeam == 1 ? 2 : 1;
   throwIn(game, newForTeam, pos);

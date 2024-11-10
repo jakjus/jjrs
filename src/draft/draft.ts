@@ -132,7 +132,9 @@ export const performDraft = async (
           .includes(redPicker.id)
       ) {
         room.setPlayerTeam(redPicker.id, 0);
-        if (afkHandler) {afkHandler(redPicker)};
+        if (afkHandler) {
+          afkHandler(redPicker);
+        }
       }
       const midPlayers = playersInZone(midZone);
       redPicker = midPlayers[0];
@@ -155,7 +157,9 @@ export const performDraft = async (
           .includes(bluePicker.id)
       ) {
         room.setPlayerTeam(bluePicker.id, 0);
-        if (afkHandler) {afkHandler(bluePicker)};
+        if (afkHandler) {
+          afkHandler(bluePicker);
+        }
       }
       const midPlayers = playersInZone(midZone);
       bluePicker = midPlayers[0];
@@ -183,7 +187,8 @@ export const performDraft = async (
         .getPlayerList()
         .map((p) => p.id)
         .includes(redPicker.id) ||
-      toAug(redPicker).afk) {
+      toAug(redPicker).afk
+    ) {
       sendMessage("Red picker left. Changing red picker...");
       await setNewPickerRed();
     }
@@ -259,9 +264,12 @@ export const performDraft = async (
           .map((pp) => pp.id)
           .includes(p.id),
     )
-    .forEach((p) => { if (afkHandler) { afkHandler(p) }});
+    .forEach((p) => {
+      if (afkHandler) {
+        afkHandler(p);
+      }
+    });
   room.stopGame();
   sendMessage("Draft finished.");
   return { red, blue };
 };
-

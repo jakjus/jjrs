@@ -1,6 +1,10 @@
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export const blendColorsInt = (color1: number, color2: number, percentage: number) => {
+export const blendColorsInt = (
+  color1: number,
+  color2: number,
+  percentage: number,
+) => {
   // Ensure the percentage is between 0 and 100
   percentage = Math.min(100, Math.max(0, percentage));
 
@@ -34,4 +38,3 @@ export const blendColorsInt = (color1: number, color2: number, percentage: numbe
   // Combine the blended RGB components back into an integer
   return combineRGB(r, g, b);
 };
-

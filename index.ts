@@ -152,7 +152,7 @@ export let toAug = (p: PlayerObject) => {
 export let room: RoomObject;
 export let game: Game | null;
 export let db: any;
-export let adminPass: string = crypto.randomBytes(6).toString('hex');
+export let adminPass: string = crypto.randomBytes(6).toString("hex");
 
 const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room = HBInit(args);
@@ -171,8 +171,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.startGame();
 
   let i = 0;
-  room.onTeamGoal = (team) => {
-  };
+  room.onTeamGoal = (team) => {};
 
   room.onGameTick = () => {
     if (!game) {
@@ -193,14 +192,14 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         i = 0;
         game.applySlowdown();
       }
-      afk.onTick()
+      afk.onTick();
     } catch (e) {
       console.log("Error:", e);
     }
   };
 
   room.onPlayerActivity = (p) => {
-    afk.onActivity(p)
+    afk.onActivity(p);
   };
 
   room.onPlayerJoin = async (p) => {
@@ -213,7 +212,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     }
     welcomePlayer(room, p);
     room.setPlayerAvatar(p.id, "");
-    await initPlayer(p)
+    await initPlayer(p);
   };
 
   room.onPlayerLeave = async (p) => {
@@ -231,7 +230,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
         room.setPlayerDiscProperties(p.id, { x: -10 });
       }
       if (msg == "b") {
-        console.log(game)
+        console.log(game);
       }
     }
 
@@ -269,7 +268,12 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPositionsReset = () => {
     clearThrowInBlocks();
     if (game) {
-      room.setDiscProperties(0, {xspeed: 0, yspeed: 0, xgravity: 0, ygravity: 0}) // without this, there was one tick where the ball's gravity was applied, and the ball has moved after positions reset.
+      room.setDiscProperties(0, {
+        xspeed: 0,
+        yspeed: 0,
+        xgravity: 0,
+        ygravity: 0,
+      }); // without this, there was one tick where the ball's gravity was applied, and the ball has moved after positions reset.
       game.ballRotation = { x: 0, y: 0, power: 0 };
     }
   };
@@ -290,20 +294,21 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerBallKick = (p) => {
     if (game) {
       const pp = toAug(p);
-      teamplayBoost(game, p)
-      applyRotation(game, p)
+      teamplayBoost(game, p);
+      applyRotation(game, p);
       handleLastTouch(game, pp);
       if (pp.activation > 20) {
         pp.activation = 0;
         room.setPlayerAvatar(p.id, "");
       }
-
     }
   };
 
   room.onRoomLink = (url) => {
     console.log(`Room link: ${url}`);
-    console.log(`Admin Password: ${adminPass}\nLogin using: '!admin ${adminPass}'`);
+    console.log(
+      `Admin Password: ${adminPass}`,
+    );
   };
 
   initChooser(room); // must be called at the end

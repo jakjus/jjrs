@@ -8,7 +8,6 @@
 > Haxball Room Script for JJRS (Jakjus Real Soccer)
 
 ![Draft System Preview](./preview.png)
-JJRS is the most advanced Real Soccer script in HaxBall.
 
 ### 🚀 [Discord](https://discord.gg/Frg8Cr8UQb)
 
@@ -73,13 +72,15 @@ Hold and release KICK to activate superpower. Release on correct emoji to activa
   benefit).
 
 ### Commands
-*[NOTE] It is **not** intended do pause/stop/start games manually, as well as change
+
+_[NOTE] It is **not** intended do pause/stop/start games manually, as well as change
 maps (also through using commands). Most of the time it works, but the script was not
-designed to handle manual actions.*
+designed to handle manual actions._
+
 - `!login your_admin_pass` - login as admin. It allows you to use `!rs` and
   `!draft`
 - `!draft` - start draft. Stopping it before end result may result in a
-in server crash.
+  in server crash.
 - `!rs` - change map to Jakjus Real Soccer
 
 ### Settings
@@ -89,6 +90,7 @@ change RS map physics, you should update settings values in
 `src/settings.ts`.
 
 ## Current state
+
 There are minor bugs, like synchronization issues (duplicate events that
 cause outs/freekicks happening randomly on the other side of the map) and
 major bugs (core dumped, ball disappearing, ball stuck on the out).
@@ -105,6 +107,9 @@ supervision to restart the server when necessary.
 - LinkedIn: [@jakubjuszko](https://linkedin.com/in/jakubjuszko)
 
 ## 🤝 Contributing
+
+This package is not published on NPM, because the script is self-contained and I do not expect anyone to
+plug it into a bigger script.
 
 Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/jakjus/hax-climb/issues).
 

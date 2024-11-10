@@ -101,16 +101,16 @@ const slide = async (game: Game, p: PlayerAugmented) => {
     return;
   }
   const props = room.getPlayerDiscProperties(p.id);
-    if (p.cooldownUntil > new Date().getTime()) {
-      sendMessage(
-        `Cooldown: ${Math.ceil((p.cooldownUntil - new Date().getTime()) / 1000)}s`,
-        p,
-      );
-      p.activation = 0;
-      room.setPlayerAvatar(p.id, "🚫");
-      setTimeout(() => room.setPlayerAvatar(p.id, ""), 200);
-      return;
-    }
+  if (p.cooldownUntil > new Date().getTime()) {
+    sendMessage(
+      `Cooldown: ${Math.ceil((p.cooldownUntil - new Date().getTime()) / 1000)}s`,
+      p,
+    );
+    p.activation = 0;
+    room.setPlayerAvatar(p.id, "🚫");
+    setTimeout(() => room.setPlayerAvatar(p.id, ""), 200);
+    return;
+  }
   room.setPlayerDiscProperties(p.id, {
     xspeed: props.xspeed * 3.4,
     yspeed: props.yspeed * 3.4,

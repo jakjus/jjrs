@@ -1,8 +1,9 @@
 {
   "name": "jjrs",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "run.ts",
   "scripts": {
+    "build": "tsc",
     "start": "ts-node run.ts"
   },
   "author": "Jakub Juszko",
@@ -27,5 +28,19 @@
   },
   "devDependencies": {
     "prettier": "3.3.3"
-  }
+  },
+  "keywords": [
+    "haxball",
+    "script",
+    "room",
+    "server",
+    "real",
+    "soccer",
+    "rs",
+    "jakjus"
+  ],
+  "bugs": {
+    "url": "https://github.com/jakjus/jjrs/issues"
+  },
+  "declaration": true
 }

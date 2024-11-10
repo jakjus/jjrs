@@ -10,13 +10,13 @@ import { calculateChanges, execChanges } from "hax-standard-elo";
 import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
 
 /* This manages teams and players depending
-* on being during ranked game or draft phase. */
+ * on being during ranked game or draft phase. */
 
 const maxTeamSize = process.env.DEBUG ? 2 : teamSize;
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 export let duringDraft: boolean = false;
-export let changeDuringDraft = (m: boolean) => duringDraft = m
+export let changeDuringDraft = (m: boolean) => (duringDraft = m);
 
 const balanceTeams = () => {
   if (duringDraft || isRanked) {

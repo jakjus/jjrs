@@ -35,25 +35,28 @@ const commands: { [key: string]: commandFunc } = {
 
 const adminLogin = (p: PlayerAugmented, args: string[]) => {
   if (args.length < 1) {
-    sendMessage('Usage: !admin your_admin_pass', p)
-    return
+    sendMessage("Usage: !admin your_admin_pass", p);
+    return;
   }
   if (args[0] === adminPass) {
-    room.setPlayerAdmin(p.id, true)
-    sendMessage('Login successful.', p)
+    room.setPlayerAdmin(p.id, true);
+    sendMessage("Login successful.", p);
   } else {
-    sendMessage('Wrong password.', p)
+    sendMessage("Wrong password.", p);
   }
-}
+};
 
 const draft = async (p: PlayerAugmented) => {
   if (!room.getPlayer(p.id).admin) {
-    sendMessage("❌ ADMIN only command. If you're an admin, log in with !admin", p)
-    return
+    sendMessage(
+      "❌ ADMIN only command. If you're an admin, log in with !admin",
+      p,
+    );
+    return;
   }
-  sendMessage(`${p.name} has changed map to jakjus Draft`)
-  changeDuringDraft(true)
-  const result = await performDraft(room, room.getPlayerList(), teamSize)
+  sendMessage(`${p.name} has changed map to jakjus Draft`);
+  changeDuringDraft(true);
+  const result = await performDraft(room, room.getPlayerList(), teamSize);
   room.getPlayerList().forEach((p) => {
     if (p.team != 0) {
       room.setPlayerTeam(p.id, 0);
@@ -61,22 +64,25 @@ const draft = async (p: PlayerAugmented) => {
   });
   result?.red?.forEach((p) => room.setPlayerTeam(p.id, 1));
   result?.blue?.forEach((p) => room.setPlayerTeam(p.id, 2));
-  changeDuringDraft(false)
-}
+  changeDuringDraft(false);
+};
 
 const rs = (p: PlayerAugmented) => {
   if (!room.getPlayer(p.id).admin) {
-    sendMessage("❌ ADMIN only command. If you're an admin, log in with !admin", p)
-    return
+    sendMessage(
+      "❌ ADMIN only command. If you're an admin, log in with !admin",
+      p,
+    );
+    return;
   }
-  room.stopGame()
+  room.stopGame();
   const rsStadium = fs.readFileSync("./maps/rs5.hbs", {
     encoding: "utf8",
     flag: "r",
   });
   room.setCustomStadium(rsStadium);
-  sendMessage(`${p.name} has changed map to JJRS`)
-}
+  sendMessage(`${p.name} has changed map to JJRS`);
+};
 
 const setAfk = (p: PlayerAugmented) => {
   p.afk = true;
