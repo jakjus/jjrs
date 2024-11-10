@@ -230,6 +230,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       if (msg == "a") {
         room.setPlayerDiscProperties(p.id, { x: -10 });
       }
+      if (msg == "b") {
+        console.log(game)
+      }
     }
 
     if (isCommand(msg)) {
@@ -266,6 +269,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPositionsReset = () => {
     clearThrowInBlocks();
     if (game) {
+      room.setDiscProperties(0, {xspeed: 0, yspeed: 0, xgravity: 0, ygravity: 0}) // without this, there was one tick where the ball's gravity was applied, and the ball has moved after positions reset.
       game.ballRotation = { x: 0, y: 0, power: 0 };
     }
   };
