@@ -1,7 +1,7 @@
 {
   "name": "jjrs",
   "version": "0.1.0",
-  "main": "run.ts",
+  "main": "index.ts",
   "scripts": {
     "build": "tsc",
     "start": "ts-node run.ts"
