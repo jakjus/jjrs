@@ -134,6 +134,7 @@ const initChooser = (room: RoomObject) => {
   room.onTeamGoal = (team) => {
     if (game) {
       game.inPlay = false;
+      game.animation = true;
       game.boostCount = 0;
       game.positionsDuringPass = [];
       players.forEach((p) => (p.canCallFoulUntil = 0));

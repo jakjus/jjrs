@@ -396,6 +396,7 @@ const throwRealBall = async (
     Math.abs(toPos.y) > mapBounds.y - 5
       ? Math.sign(toPos.y) * (mapBounds.y + 250)
       : toPos.y;
+  game.ballRotation.power = 0
   room.setDiscProperties(0, {
     radius: 0,
     xspeed: 0,
@@ -462,6 +463,8 @@ const throwRealBall = async (
   room.setDiscProperties(0, {
     x: toPos.x,
     y: toPos.y,
+    xgravity: 0,
+    ygravity: 0,
     radius: defaults.ballRadius,
     cMask: room.CollisionFlags.all,
     cGroup:

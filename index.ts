@@ -230,9 +230,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       if (msg == "a") {
         room.setPlayerDiscProperties(p.id, { x: -10 });
       }
-      if (msg == "b") {
-        console.log(game);
-      }
+    }
+    if (msg == "!debug") {
+      console.log(game);
+      return false
     }
 
     if (isCommand(msg)) {
@@ -269,6 +270,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPositionsReset = () => {
     clearThrowInBlocks();
     if (game) {
+      game.animation = false
       room.setDiscProperties(0, {
         xspeed: 0,
         yspeed: 0,
