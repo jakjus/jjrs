@@ -138,7 +138,6 @@ const initChooser = (room: RoomObject) => {
       game.positionsDuringPass = [];
       players.forEach((p) => (p.canCallFoulUntil = 0));
       game.eventCounter += 1;
-      /* not working
       if (isRanked && !duringDraft) {
         const evC = game.eventCounter;
         const gameId = game.id;
@@ -160,7 +159,6 @@ const initChooser = (room: RoomObject) => {
           }
         }, 35000);
       }
-      */
     }
     _onTeamGoal(team);
   };
