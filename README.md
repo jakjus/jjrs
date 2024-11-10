@@ -47,7 +47,7 @@ Rename `config.example.ts` with `config.ts`. Insert **token** from https://haxba
 // config.ts
 
 export default {
-  roomName: `🌕   JJRS v1.0 by jakjus`,
+  roomName: `🌕   JJRS v0.1.0 by jakjus`,
   public: true,
   maxPlayers: 30,
   token: `YOUR_TOKEN_HERE`,
