@@ -31,6 +31,7 @@ const commands: { [key: string]: commandFunc } = {
   admin: (p, args) => adminLogin(p, args),
   draft: (p) => draft(p),
   rs: (p) => rs(p),
+  script: (p) => script(p),
 };
 
 const adminLogin = (p: PlayerAugmented, args: string[]) => {
@@ -115,5 +116,9 @@ const showDiscord = (p: PlayerAugmented) => {
 };
 
 const bb = (p: PlayerAugmented) => {
-  room.kickPlayer(p.id, "Bye!", false);
+  room.kickPlayer(p.id, "Bye!\nJoin our Discord:\ndiscord.gg/zupRtBMUjb", false);
 };
+
+const script = (p: PlayerAugmented) => {
+  sendMessage('JJRS is Open Source. Full Script: github.com/jakjus/jjrs', p)
+}
