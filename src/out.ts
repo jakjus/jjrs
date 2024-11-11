@@ -446,6 +446,9 @@ const throwRealBall = async (
     if (!thirdBall) {
       return;
     }
+    if (game.eventCounter != evCounter) {
+      return;
+    }
     const distToDest = Math.sqrt(
       (thirdBall.x - toPos.x) ** 2 + (thirdBall.y - toPos.y) ** 2,
     );
