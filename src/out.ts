@@ -21,7 +21,6 @@ const blink = async (
     if (!room.getScores()) {
       return;
     }
-    game.animation = false;
     // Cancel blink if there is another out
     if (game.inPlay || savedEventCounter != game.eventCounter) {
       //room.setDiscProperties(0, { color: colors.white });
@@ -41,7 +40,7 @@ const blink = async (
 };
 
 export const handleBallOutOfBounds = async (game: Game) => {
-  if (!game.inPlay) {
+  if (!game.inPlay || game.animation) {
     return;
   }
   const ball = room.getDiscProperties(0);
