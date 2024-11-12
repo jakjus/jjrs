@@ -216,12 +216,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     await initPlayer(p);
   };
 
+  // handled in src/chooser.ts
   room.onPlayerLeave = async (p) => {
-    players = players.filter((pp) => p.id != pp.id);
-    if (players.filter((p) => !p.afk).length < 2) {
-      room.stopGame();
-      room.startGame();
-    }
   };
 
   room.onPlayerChat = (p, msg) => {
