@@ -80,7 +80,8 @@ const handleWin = async (game: Game) => {
   await execChanges(changes, getEloOfPlayer, changeEloOfPlayer);
   changes.forEach((co) => {
     if (players.map((p) => p.id).includes(co.playerId)) {
-      toAug(room.getPlayer(co.playerId)).elo += co.change; // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
+      const pp = room.getPlayer(co.playerId)
+      if (pp) { toAug(pp).elo += co.change; } // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
     }
   });
 };
