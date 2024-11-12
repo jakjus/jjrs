@@ -218,6 +218,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   // handled in src/chooser.ts
   room.onPlayerLeave = async (p) => {
+    players = players.filter((pp) => p.id != pp.id);
   };
 
   room.onPlayerChat = (p, msg) => {
