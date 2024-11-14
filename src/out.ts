@@ -246,7 +246,7 @@ const throwIn = async (
     return;
   } // if next game started but its still on out
   const newForTeam = forTeam == 1 ? 2 : 1;
-  game.animation = true  // when giving out to other team, ball is moved, that can evoke game.inPlay = true and double-activate throwin (new throwin for opposite team and again the same team, as it will detect the ball moving)
+  game.animation = true; // when giving out to other team, ball is moved, that can evoke game.inPlay = true and double-activate throwin (new throwin for opposite team and again the same team, as it will detect the ball moving)
   throwIn(game, newForTeam, pos);
 };
 
@@ -396,7 +396,7 @@ const throwRealBall = async (
     Math.abs(toPos.y) > mapBounds.y - 5
       ? Math.sign(toPos.y) * (mapBounds.y + 250)
       : toPos.y;
-  game.ballRotation.power = 0
+  game.ballRotation.power = 0;
   room.setDiscProperties(0, {
     radius: 0,
     xspeed: 0,

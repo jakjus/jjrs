@@ -33,7 +33,7 @@ const balanceTeams = () => {
 export const handlePlayerLeaveOrAFK = async (p: PlayerAugmented) => {
   if (players.filter((p) => !p.afk).length < 1) {
     room.stopGame();
-    await sleep(5000)
+    await sleep(5000);
     room.startGame();
   }
   await sleep(100);
@@ -62,28 +62,34 @@ const handleWin = async (game: Game) => {
     return res.elo;
   };
 
-  const changes = await calculateChanges(
-    room,
-    getEloOfPlayer,
-    game.currentPlayers,
-  );
-  changes.forEach((co) => {
-    const p = room.getPlayer(co.playerId);
-    if (p) {
-      sendMessage(
-        `Your ELO: ${toAug(p).elo} → ${toAug(p).elo + co.change} (${co.change > 0 ? "+" : ""}${co.change})`,
-        p,
-      );
-    }
-  });
+  try {
+    const changes = await calculateChanges(
+      room,
+      getEloOfPlayer,
+      game.currentPlayers,
+    );
+    changes.forEach((co) => {
+      const p = room.getPlayer(co.playerId);
+      if (p) {
+        sendMessage(
+          `Your ELO: ${toAug(p).elo} → ${toAug(p).elo + co.change} (${co.change > 0 ? "+" : ""}${co.change})`,
+          p,
+        );
+      }
+    });
 
-  await execChanges(changes, getEloOfPlayer, changeEloOfPlayer);
-  changes.forEach((co) => {
-    if (players.map((p) => p.id).includes(co.playerId)) {
-      const pp = room.getPlayer(co.playerId)
-      if (pp) { toAug(pp).elo += co.change; } // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
-    }
-  });
+    await execChanges(changes, getEloOfPlayer, changeEloOfPlayer);
+    changes.forEach((co) => {
+      if (players.map((p) => p.id).includes(co.playerId)) {
+        const pp = room.getPlayer(co.playerId);
+        if (pp) {
+          toAug(pp).elo += co.change;
+        } // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
+      }
+    });
+  } catch (e) {
+    console.log("Error during handling ELO:", e);
+  }
 };
 const red = () => room.getPlayerList().filter((p) => p.team == 1);
 const blue = () => room.getPlayerList().filter((p) => p.team == 2);

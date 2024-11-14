@@ -230,7 +230,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     }
     if (msg == "!debug") {
       console.log(game);
-      return false
+      return false;
     }
 
     if (isCommand(msg)) {
@@ -267,7 +267,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPositionsReset = () => {
     clearThrowInBlocks();
     if (game) {
-      game.animation = false
+      game.animation = false;
       room.setDiscProperties(0, {
         xspeed: 0,
         yspeed: 0,
@@ -306,9 +306,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
 
   room.onRoomLink = (url) => {
     console.log(`Room link: ${url}`);
-    console.log(
-      `Admin Password: ${adminPass}`,
-    );
+    console.log(`Admin Password: ${adminPass}`);
   };
 
   initChooser(room); // must be called at the end

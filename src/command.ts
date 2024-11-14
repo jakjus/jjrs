@@ -116,9 +116,13 @@ const showDiscord = (p: PlayerAugmented) => {
 };
 
 const bb = (p: PlayerAugmented) => {
-  room.kickPlayer(p.id, "Bye!\nJoin our Discord:\ndiscord.gg/zupRtBMUjb", false);
+  room.kickPlayer(
+    p.id,
+    "Bye!\nJoin our Discord:\ndiscord.gg/zupRtBMUjb",
+    false,
+  );
 };
 
 const script = (p: PlayerAugmented) => {
-  sendMessage('JJRS is Open Source. Full Script: github.com/jakjus/jjrs', p)
-}
+  sendMessage("JJRS is Open Source. Full Script: github.com/jakjus/jjrs", p);
+};
