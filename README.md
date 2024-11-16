@@ -89,15 +89,6 @@ Some script settings can be changed in `src/settings.ts`. Also, if you
 change RS map physics, you should update settings values in
 `src/settings.ts`.
 
-## Current state
-
-There are minor bugs, like synchronization issues (duplicate events that
-cause outs/freekicks happening randomly on the other side of the map) and
-major bugs (core dumped, ball disappearing, ball stuck on the out).
-
-Currently TTF (Time To Failure) is 9 hours on average, therefore it needs admin
-supervision to restart the server when necessary.
-
 ## Author
 
 👤 **Jakub Juszko**
