@@ -1,7 +1,7 @@
 <h1 align="center">JJRS - Jakjus Real Soccer</h1>
 <p>
-  <a href="https://github.com/jakjus/hax-climb/blob/master/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/github/license/jakjus/hax-climb" />
+  <a href="https://github.com/jakjus/hax-rs/blob/master/LICENSE" target="_blank">
+    <img alt="License: MIT" src="https://img.shields.io/github/license/jakjus/hax-rs" />
   </a>
 </p>
 
@@ -102,7 +102,7 @@ change RS map physics, you should update settings values in
 This package is not published on NPM, because the script is self-contained and I do not expect anyone to
 plug it into a bigger script.
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/jakjus/hax-climb/issues).
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/jakjus/hax-rs/issues).
 
 ## Show your support
 
@@ -111,6 +111,6 @@ Give a ⭐️ if this project helped you!
 ## 📝 License
 
 Copyright © 2024 [Jakub Juszko](https://github.com/jakjus).<br />
-This project is [MIT](https://github.com/jakjus/hax-climb/blob/master/LICENSE) licensed.
+This project is [MIT](https://github.com/jakjus/hax-rs/blob/master/LICENSE) licensed.
 
 ---
