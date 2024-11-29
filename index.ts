@@ -97,7 +97,7 @@ export class Game {
     this.ballRotation = { x: 0, y: 0, power: 0 };
     this.positionsDuringPass = [];
     this.skipOffsideCheck = false;
-    this.currentPlayers = [...players]; // used to keep track on leavers in case they reconnect with red card or injury
+    this.currentPlayers = JSON.parse(JSON.stringify(players)); // used to keep track on leavers in case they reconnect with red card or injury
     this.rotateNextKick = false;
     this.boostCount = 0;
   }
