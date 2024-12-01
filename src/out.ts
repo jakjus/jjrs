@@ -461,7 +461,7 @@ const throwRealBall = async (
   // Hide fake ball and replace with real ball
   room.setDiscProperties(thirdBallId, { x: 1000, y: 860 });
   const toMass = game.rotateNextKick
-    ? defaults.ballInvMass + 0.57
+    ? defaults.ballInvMass + 0.63
     : defaults.ballInvMass;
   room.setDiscProperties(0, {
     x: toPos.x,

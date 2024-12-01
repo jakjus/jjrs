@@ -18,4 +18,4 @@ export const colors = {
 export const secondBallId = 24;
 export const thirdBallId = 25;
 export const offsideDiscs = { red: [26, 27], blue: [28, 29] };
-export const teamSize = 5;
+export const teamSize = 6;
