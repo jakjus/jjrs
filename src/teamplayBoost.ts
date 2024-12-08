@@ -16,7 +16,7 @@ export const boostToColor = (game: Game, team?: TeamID) =>
 export const setBallInvMassAndColor = (game: Game, team?: TeamID) => {
   room.setDiscProperties(0, {
     color: boostToColor(game, team),
-    invMass: defaults.ballInvMass + boostToCoef(game) * 1.5,
+    invMass: defaults.ballInvMass + boostToCoef(game) * 1.45,
   });
 };
 
