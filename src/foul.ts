@@ -65,7 +65,7 @@ const handleSlide = (slider: PlayerAugmented, victim: PlayerAugmented) => {
     cardsFactor += 0.3;
   }
   const power = Math.max(
-    Math.sqrt(sliderProps.xspeed ** 2 + sliderProps.yspeed ** 2) * 0.6,
+    Math.sqrt(sliderProps.xspeed ** 2 + sliderProps.yspeed ** 2) * 0.54,
     0.5,
   );
   const slowdown = power > 2.9 ? 0.045 * power : 0.032 * power;
