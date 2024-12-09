@@ -179,21 +179,21 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       return;
     }
     try {
-      if (game.inPlay) {
-        game.handleBallOutOfBounds();
-        game.rotateBall();
-      } else {
-        game.handleBallInPlay();
-      }
-      game.handleBallTouch();
-      game.checkAllX();
-      game.checkFoul();
       i++;
+      game.handleBallTouch();
       if (i > 6) {
-        i = 0;
+        if (game.inPlay) {
+          game.handleBallOutOfBounds();
+          game.rotateBall();
+        } else {
+          game.handleBallInPlay();
+        }
         game.applySlowdown();
+        afk.onTick();
+        game.checkAllX();
+        game.checkFoul();
+        i = 0;
       }
-      afk.onTick();
     } catch (e) {
       console.log("Error:", e);
     }

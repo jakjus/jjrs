@@ -7,7 +7,7 @@ export const afk = {
   onTick: () => {
     let j = 0;
     if (!duringDraft && !process.env.DEBUG) {
-      j++;
+      j+=6;
     }
 
     if (j > 60) {

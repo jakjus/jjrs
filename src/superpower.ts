@@ -19,7 +19,7 @@ export const checkAllX = (game: Game) => {
       }
       // When X is PRESSED
       if (props.damping == defaults.kickingDamping) {
-        pp.activation++;
+        pp.activation+=6;
         if (
           new Date().getTime() < pp.canCallFoulUntil &&
           pp.activation > 20 &&
@@ -88,7 +88,7 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
   });
   setTimeout(
     () => room.setPlayerDiscProperties(p.id, { xgravity: 0, ygravity: 0 }),
-    900,
+    1050,
   );
 };
 
@@ -141,5 +141,6 @@ export const rotateBall = (game: Game) => {
     xgravity: 0.01 * game.ballRotation.x * game.ballRotation.power,
     ygravity: 0.01 * game.ballRotation.y * game.ballRotation.power,
   });
-  game.ballRotation.power *= 0.95;
+  //game.ballRotation.power *= 0.95;
+  game.ballRotation.power *= 0.735;
 };
