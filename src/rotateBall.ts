@@ -9,13 +9,13 @@ export const applyRotation = (game: Game, p: PlayerObject) => {
   game.ballRotation = {
     x: -vecXsp,
     y: -vecYsp,
-    power: spMagnitude ** 0.5 * 5,
+    power: spMagnitude ** 0.5 * 4,
   };
   if (game.rotateNextKick) {
     game.ballRotation = {
       x: -vecXsp,
       y: -vecYsp,
-      power: spMagnitude ** 0.5 * 12,
+      power: spMagnitude ** 0.5 * 11,
     };
   }
   game.rotateNextKick = false;
