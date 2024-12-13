@@ -148,6 +148,7 @@ const initChooser = (room: RoomObject) => {
       game.inPlay = false;
       game.animation = true;
       game.boostCount = 0;
+      game.ballRotation.power = 0;
       game.positionsDuringPass = [];
       players.forEach((p) => (p.canCallFoulUntil = 0));
       game.eventCounter += 1;

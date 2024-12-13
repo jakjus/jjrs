@@ -88,7 +88,7 @@ export const sprint = (game: Game, p: PlayerAugmented) => {
   });
   setTimeout(
     () => room.setPlayerDiscProperties(p.id, { xgravity: 0, ygravity: 0 }),
-    1050,
+    1000,
   );
 };
 
@@ -123,7 +123,7 @@ const slide = async (game: Game, p: PlayerAugmented) => {
   p.sliding = false;
   p.slowdown = 0.13;
   p.slowdownUntil = new Date().getTime() + 1000 * 3;
-  p.cooldownUntil = new Date().getTime() + 18000;
+  p.cooldownUntil = new Date().getTime() + 23000;
   room.setPlayerAvatar(p.id, "");
 };
 
