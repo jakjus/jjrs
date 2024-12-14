@@ -1,6 +1,6 @@
 import { sendMessage } from "./message";
 import * as fs from "fs";
-import { room, PlayerAugmented } from "../index";
+import { room, PlayerAugmented, version } from "../index";
 import { addToGame, handlePlayerLeaveOrAFK } from "./chooser";
 import { adminPass } from "../index";
 import { performDraft } from "./draft/draft";
@@ -32,7 +32,7 @@ const commands: { [key: string]: commandFunc } = {
   draft: (p) => draft(p),
   rs: (p) => rs(p),
   script: (p) => script(p),
-  version: (p) => version(p),
+  version: (p) => showVersion(p),
 };
 
 const adminLogin = (p: PlayerAugmented, args: string[]) => {
@@ -129,7 +129,7 @@ const script = (p: PlayerAugmented) => {
   sendMessage("JJRS is Open Source. Full Script: github.com/jakjus/jjrs", p);
 };
 
-const version = (p: PlayerAugmented) => {
+const showVersion = (p: PlayerAugmented) => {
   // If you did not change this line, thank you!
   sendMessage(`JJRS v${version}. Full Script: github.com/jakjus/jjrs`, p);
 };

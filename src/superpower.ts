@@ -7,9 +7,6 @@ import { sleep } from "./utils";
 import { isPenalty } from "./foul";
 
 export const checkAllX = (game: Game) => {
-  if (!game.inPlay) {
-    return;
-  }
   players
     .filter((p) => p.team != 0)
     .forEach((pp) => {
@@ -51,9 +48,19 @@ export const checkAllX = (game: Game) => {
         // When X is RELEASED
       } else if (pp.activation > 20 && pp.activation < 60) {
         pp.activation = 0;
+        if (!game.inPlay) {
+          room.setPlayerAvatar(pp.id, "🚫");
+          setTimeout(() => room.setPlayerAvatar(pp.id, ""), 200);
+          return
+        }
         slide(game, pp);
       } else if (pp.activation >= 60 && pp.activation < 100) {
         pp.activation = 0;
+        if (!game.inPlay) {
+          room.setPlayerAvatar(pp.id, "🚫");
+          setTimeout(() => room.setPlayerAvatar(pp.id, ""), 200);
+          return;
+        }
         if (pp.cooldownUntil > new Date().getTime()) {
           sendMessage(
             `Cooldown: ${Math.ceil((pp.cooldownUntil - new Date().getTime()) / 1000)}s.`,
