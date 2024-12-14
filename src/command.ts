@@ -32,6 +32,7 @@ const commands: { [key: string]: commandFunc } = {
   draft: (p) => draft(p),
   rs: (p) => rs(p),
   script: (p) => script(p),
+  version: (p) => version(p),
 };
 
 const adminLogin = (p: PlayerAugmented, args: string[]) => {
@@ -124,5 +125,11 @@ const bb = (p: PlayerAugmented) => {
 };
 
 const script = (p: PlayerAugmented) => {
+  // If you did not change this line, thank you!
   sendMessage("JJRS is Open Source. Full Script: github.com/jakjus/jjrs", p);
+};
+
+const version = (p: PlayerAugmented) => {
+  // If you did not change this line, thank you!
+  sendMessage(`JJRS v${version}. Full Script: github.com/jakjus/jjrs`, p);
 };

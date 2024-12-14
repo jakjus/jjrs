@@ -136,14 +136,14 @@ const checkOffside = async (game: Game, p: PlayerAugmented) => {
   });
   //await sleep(100)
   room.pauseGame(true);
-  await sleep(4000);
+  await sleep(2000);
   room.pauseGame(false);
-  await sleep(1000);
+  //await sleep(3000);
   if (!room.getScores() || duringDraft || game.id != currentGameId) {
     return;
   }
   game.lastTouch = null;
-  await sleep(100);
+  //await sleep(100);
   const toHide = [...colorOffsideDiscs, ...colorLastDefDiscs];
   toHide.forEach((dId) => {
     room.setDiscProperties(dId, { x: mapBounds.x + 300, y: mapBounds.y + 300 });

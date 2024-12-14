@@ -39,7 +39,7 @@ const blink = async (
   //room.setDiscProperties(0, { color: colors.white });
 };
 
-export const handleBallOutOfBounds = async (game: Game) => {
+export const handleBallOutOfBounds = (game: Game) => {
   if (!game.inPlay || game.animation) {
     return;
   }
@@ -387,6 +387,9 @@ const throwRealBall = async (
   }
   game.animation = true;
   game.inPlay = false;
+  room.getPlayerList().filter(p => p.team != 0).forEach(p => {
+    toAug(p).activation = 0  // dont get stuck with superpower on out
+  })
   resetTeamplayBoost(game);
   const xPushOutOfSight =
     Math.abs(toPos.x) > mapBounds.x - 5
@@ -423,23 +426,23 @@ const throwRealBall = async (
   // left direction       \_   _/
   //                        '''
 
-  //const dist = 100  // distance from which ball is passed
-  //const throwStrength = 0.0125  // ball pass strength
-  const dist = 200; // distance from which ball is passed
-  const throwStrength = 0.0105; // ball pass strength
+  const dist = 140; // distance from which ball is passed
+  const throwStrength = 0.02; // ball pass strength
   const spread = Math.PI / 2; // can be between PI and 0 (0 will throw directly from horizontal or vertical line)
   const angle = (Math.PI - spread) / 2 + Math.random() * spread + angleOffset;
   const throwFromX = Math.sin(angle) * dist + toPos.x;
   const throwFromY = -Math.cos(angle) * dist + toPos.y;
   const throwSpeedX = Math.sin(angle + Math.PI) * dist * throwStrength;
   const throwSpeedY = -Math.cos(angle + Math.PI) * dist * throwStrength;
-  await sleep(Math.random() * 500);
+  //await sleep(Math.random() * 500);
   room.setDiscProperties(thirdBallId, {
     //color: forTeam == 1 ? colors.red : colors.blue,
     x: throwFromX,
     y: throwFromY,
     xspeed: throwSpeedX,
     yspeed: throwSpeedY,
+    xgravity: -throwSpeedX*0.004,
+    ygravity: -throwSpeedY*0.004,
   });
   for (let i = 0; i < 1000; i++) {
     const thirdBall = room.getDiscProperties(thirdBallId);
@@ -450,16 +453,16 @@ const throwRealBall = async (
       return;
     }
     const distToDest = Math.sqrt(
-      (thirdBall.x - toPos.x) ** 2 + (thirdBall.y - toPos.y) ** 2,
+      ((thirdBall.x+thirdBall.xspeed*2) - toPos.x) ** 2 + ((thirdBall.y+thirdBall.yspeed*2) - toPos.y) ** 2,
     );
     if (distToDest < 1.2) {
       break;
     }
-    await sleep(50);
+    await sleep(33.333);  // 2 frames
   }
 
   // Hide fake ball and replace with real ball
-  room.setDiscProperties(thirdBallId, { x: 1000, y: 860 });
+  room.setDiscProperties(thirdBallId, { x: 1000, y: 860, xgravity: 0, ygravity: 0 });
   const toMass = game.rotateNextKick
     ? defaults.ballInvMass + 0.63
     : defaults.ballInvMass;
