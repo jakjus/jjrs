@@ -21,8 +21,6 @@ export const setBallInvMassAndColor = (game: Game, team?: TeamID) => {
 };
 
 export const teamplayBoost = (game: Game, p: PlayerObject) => {
-  if (game.animation || !game.inPlay) { return
-  }
   // Teamplay boost. Ball is lighter (kicks are stronger)
   // depending on within team pass streak.
   if (!game.lastKick || game.lastKick?.team === p.team) {
