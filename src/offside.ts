@@ -15,11 +15,12 @@ export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
       checkOffside(game, p);
     }
   }
-  if (game.lastKick?.team !== p.team && game.inPlay) {
-    game.boostCount = 0;
-    game.lastKick = null;
-    setBallInvMassAndColor(game);
-  }
+  // moved to index.ts different logic (more distance)
+  //if (game.lastKick?.team !== p.team && game.inPlay) {
+  //  game.boostCount = 0;
+  //  game.lastKick = null;
+  //  setBallInvMassAndColor(game);
+  //}
   savePositionsOnTouch(game);
   const ballPos = room.getBallPosition();
   game.lastTouch = { byPlayer: p, x: ballPos.x, y: ballPos.y };

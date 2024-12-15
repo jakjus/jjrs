@@ -15,13 +15,13 @@ import { applySlowdown } from "./src/slowdown";
 import initChooser from "./src/chooser";
 import { welcomePlayer } from "./src/welcome";
 import { initDb } from "./src/db";
-import { teamplayBoost } from "./src/teamplayBoost";
+import { setBallInvMassAndColor, teamplayBoost } from "./src/teamplayBoost";
 import { applyRotation } from "./src/rotateBall";
 import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.1.1 (15/12/2024)'
+export const version = '1.1.2 (16/12/2024)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -122,7 +122,18 @@ export class Game {
         const pAug = toAug(p);
         pAug.sliding = false;
         handleLastTouch(this, pAug);
-        return;
+      }
+
+      // Used for cancelling teamplay. I dont want to enemy
+      // team to be able to hit boosted ball when intercepting
+      // strength
+      if ((this.lastKick?.team == p.team) || !this.inPlay) { continue }
+      const distPredicted = Math.sqrt(((prop.x+prop.xspeed*2) - (ball.x+ball.xspeed*2)) ** 2 + ((prop.y+prop.yspeed*2) - (ball.y+ball.yspeed*2)) ** 2);
+      const isAlmostTouching = distPredicted < prop.radius + ball.radius + 5;
+      if (isAlmostTouching) {
+        this.boostCount = 0;
+        this.lastKick = null;
+        setBallInvMassAndColor(this);
       }
     }
   }
