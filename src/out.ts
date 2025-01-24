@@ -142,9 +142,9 @@ const goalKick = async (
         });
         // Move back from the line
         if (
-          Math.sign(pos.x) * p.position.x > 840 &&
-          p.position.y > -320 &&
-          p.position.y < 320
+          Math.sign(pos.x) * p.position.x > 830 &&
+          p.position.y > -330 &&
+          p.position.y < 330
         ) {
           room.setPlayerDiscProperties(p.id, { x: Math.sign(pos.x) * 825 });
         }
@@ -224,9 +224,9 @@ const throwIn = async (
             room.CollisionFlags.c1,
         });
         // Move back from the line
-        if (p.position.y < -460 && pos.y < 0) {
+        if (p.position.y < -450 && pos.y < 0) {
           room.setPlayerDiscProperties(p.id, { y: -440 });
-        } else if (p.position.y > 460 && pos.y > 0) {
+        } else if (p.position.y > 450 && pos.y > 0) {
           room.setPlayerDiscProperties(p.id, { y: 440 });
         }
       }
@@ -530,9 +530,9 @@ export const penalty = async (
       });
       // Move back from the line
       if (
-        Math.sign(pos.x) * p.position.x > 840 &&
-        p.position.y > -320 &&
-        p.position.y < 320
+        Math.sign(pos.x) * p.position.x > 830 &&
+        p.position.y > -330 &&
+        p.position.y < 330
       ) {
         room.setPlayerDiscProperties(p.id, { x: Math.sign(pos.x) * 825 });
       }

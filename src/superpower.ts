@@ -22,6 +22,9 @@ export const checkAllX = (game: Game) => {
           pp.activation > 20 &&
           Math.abs(pp.fouledAt.x) < mapBounds.x
         ) {
+          if (!game.inPlay) {
+            return
+          }
           sendMessage(`${pp.name} has called foul.`);
           if (isPenalty(pp)) {
             penalty(game, pp.team, { ...pp.fouledAt });
