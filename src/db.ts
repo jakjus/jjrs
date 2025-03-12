@@ -9,6 +9,7 @@ const createTables = async (db: any) => {
             "id"	INTEGER,
             "auth"	TEXT NOT NULL,
             "name"	TEXT,
+            "admin" BOOLEAN NOT NULL DEFAULT 0,
             "elo"	INTEGER,
             PRIMARY KEY("id" AUTOINCREMENT)
     );`,
@@ -29,6 +30,21 @@ export const changeEloOfPlayer = async (playerId: number, change: number) => {
   await db.run(`UPDATE players SET elo=elo+? WHERE auth=?`, [change, p.auth]);
 };
 
+export const setPlayerAsAdmin = async (playerId: number) => {
+  const p = game?.currentPlayers.find((p) => p.id == playerId);
+  if (!p) {
+    console.log("Error: Player with ID", playerId, "not found.");
+    return;
+  }
+  try {
+    await db.run(`UPDATE players SET admin = 1 WHERE auth = ?`, [p.auth]);
+    console.log(`Player ${p.name} (ID: ${playerId}) is now an admin.`);
+  } catch (error) {
+    console.error("Error updating admin status for player:", error);
+  }
+};
+
+
 export const initDb = async () => {
   db = await Database.open("db.sqlite");
   // Uncomment for DB SQL Debug:
@@ -44,23 +60,33 @@ export const initDb = async () => {
 
 interface ReadPlayer {
   elo: number;
+  admin: boolean;
 }
 
 export const getOrCreatePlayer = async (
-  p: PlayerObject | PlayerAugmented,
+p: PlayerObject | PlayerAugmented,
 ): Promise<ReadPlayer> => {
   const auth = p.auth;
-  const playerInDb = await db.get("SELECT elo FROM players WHERE auth=?", [
+  const playerInDb = await db.get("SELECT elo, admin FROM players WHERE auth=?", [
     auth,
   ]);
+
   if (!playerInDb) {
-    await db.run("INSERT INTO players(auth, name, elo) VALUES (?, ?, ?)", [
+    await db.run("INSERT INTO players(auth, name, elo, admin) VALUES (?, ?, ?, ?)", [
       p.auth,
       p.name,
       1200,
+      0,
     ]);
-    const newPlayer = { elo: 1200 };
-    return newPlayer;
+    return { 
+      elo: 1200, 
+      admin: false
+    };
   }
-  return playerInDb;
+
+  return { 
+    elo: playerInDb.elo, 
+    admin: Boolean(playerInDb.admin)
+  };
 };
+
