@@ -53,6 +53,7 @@ export class PlayerAugmented {
     this.gameId = gameId;
     this.name = p.name;
     this.auth = p.auth;
+    this.admin = p.admin;
     this.conn = p.conn;
     this.team = p.team;
     this.foulsMeter = p.foulsMeter || 0;

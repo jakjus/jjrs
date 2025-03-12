@@ -6,6 +6,7 @@ import { adminPass } from "../index";
 import { performDraft } from "./draft/draft";
 import { teamSize } from "./settings";
 import { changeDuringDraft } from "./chooser";
+import { setPlayerAsAdmin } from "./db";
 import config from "../config";
 
 export const isCommand = (msg: string) => msg.trim().startsWith("!");
@@ -42,6 +43,7 @@ const adminLogin = (p: PlayerAugmented, args: string[]) => {
   }
   if (args[0] === adminPass) {
     room.setPlayerAdmin(p.id, true);
+    setPlayerAsAdmin(p.id);
     sendMessage("Login successful.", p);
   } else {
     sendMessage("Wrong password.", p);
