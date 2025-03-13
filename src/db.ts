@@ -44,6 +44,48 @@ export const setPlayerAsAdmin = async (playerId: number) => {
   }
 };
 
+export const removePlayerAsAdmin = async (auth: string) => {
+  try {
+    // Check if the player exists
+    const player = await db.get(`SELECT admin FROM players WHERE auth = ?`, [auth]);
+
+    if (!player) {
+      sendMessage(`Player with auth ${auth} does not exist in the database.`);
+      return;
+    }
+
+    // Check if the player is admin
+    if (player.admin !== 1) {
+      sendMessage(`Player with auth ${auth} is not an admin.`);
+      return;
+    }
+
+    // Remove admin rights
+    await db.run(`UPDATE players SET admin = 0 WHERE auth = ?`, [auth]);
+    sendMessage(`Player with auth ${auth} is no longer an admin.`);
+    
+  } catch (error) {
+    console.error("Error removing admin privileges:", error);
+  }
+};
+
+
+export const getAdminsList = async (p: PlayerAugmented) => {
+  try {
+    const admins = await db.all(`SELECT name, auth FROM players WHERE admin = 1`);
+
+    if (admins.length === 0) {
+      sendMessage(`Admins not found.`, p);
+      return;
+    }
+
+    admins.forEach((admin: { name: string; auth: string }) => {
+      sendMessage(`${admin.name} - [${admin.auth}]`, p);
+    });
+  } catch (error) {
+    console.error("Error retrieving admins list:", error);
+  }
+};
 
 export const initDb = async () => {
   db = await Database.open("db.sqlite");
