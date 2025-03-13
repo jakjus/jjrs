@@ -1,12 +1,12 @@
 import { sendMessage } from "./message";
 import * as fs from "fs";
-import { room, PlayerAugmented, version } from "../index";
+import { room, PlayerAugmented } from "../index";
 import { addToGame, handlePlayerLeaveOrAFK } from "./chooser";
 import { adminPass } from "../index";
 import { performDraft } from "./draft/draft";
 import { teamSize } from "./settings";
 import { changeDuringDraft } from "./chooser";
-import { setPlayerAsAdmin } from "./db";
+import { setPlayerAsAdmin, removePlayerAsAdmin, getAdminsList } from "./db";
 import config from "../config";
 
 export const isCommand = (msg: string) => msg.trim().startsWith("!");
@@ -30,10 +30,10 @@ const commands: { [key: string]: commandFunc } = {
   bb: (p) => bb(p),
   help: (p) => showHelp(p),
   admin: (p, args) => adminLogin(p, args),
+  deladmin: (p, args) => adminRemove (p, args),
+  ladmin: (p) => adminList(p),
   draft: (p) => draft(p),
   rs: (p) => rs(p),
-  script: (p) => script(p),
-  version: (p) => showVersion(p),
 };
 
 const adminLogin = (p: PlayerAugmented, args: string[]) => {
@@ -49,6 +49,36 @@ const adminLogin = (p: PlayerAugmented, args: string[]) => {
     sendMessage("Wrong password.", p);
   }
 };
+
+const adminRemove = async (p: PlayerAugmented, args: string[]) => {
+  if (args.length < 1) {
+    sendMessage("Usage: !deladmin auth", p);
+    return;
+  }
+
+  if (!p.admin) {
+    sendMessage(
+      "❌ ADMIN only command. If you're an admin, log in with !admin",
+      p,
+    );
+    return; 
+  }
+
+  if (args[0]){
+    removePlayerAsAdmin(args[0]);
+  }
+};
+
+const adminList = async (p: PlayerAugmented) => {
+  if (!p.admin) {
+    sendMessage(
+      "❌ ADMIN only command. If you're an admin, log in with !admin",
+      p,
+    );
+    return; 
+  }
+  await getAdminsList(p);
+}
 
 const draft = async (p: PlayerAugmented) => {
   if (!room.getPlayer(p.id).admin) {
