@@ -193,7 +193,17 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.startGame();
 
   let i = 0;
-  room.onTeamGoal = (team) => {};
+  
+  room.onTeamGoal = (team) => {
+    if (game?.lastTouch?.byPlayer.team === team) {
+      sendMessage(`Goal! Player ${game?.lastTouch?.byPlayer.name} scored! 🥅`);
+      if (game?.previousTouch?.byPlayer.id !== game?.lastTouch?.byPlayer.id && game?.previousTouch?.byPlayer.team === game?.lastTouch?.byPlayer.team) {
+        sendMessage(`Assist by ${game?.previousTouch?.byPlayer.name}! 🎯`);
+      }
+    } else {
+      sendMessage(`Own goal by ${game?.lastTouch?.byPlayer.name}! 😱`);
+    }
+  };
 
   room.onGameTick = () => {
     if (!game) {
