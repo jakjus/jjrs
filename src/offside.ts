@@ -23,7 +23,10 @@ export const handleLastTouch = async (game: Game, p: PlayerAugmented) => {
   //}
   savePositionsOnTouch(game);
   const ballPos = room.getBallPosition();
-  game.lastTouch = { byPlayer: p, x: ballPos.x, y: ballPos.y };
+  if (!game.lastTouch || p.id !== game.lastTouch.byPlayer.id) {
+    game.previousTouch = game.lastTouch;
+    game.lastTouch = { byPlayer: p, x: ballPos.x, y: ballPos.y };
+  }
 };
 
 const savePositionsOnTouch = (game: Game) => {
