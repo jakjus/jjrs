@@ -29,6 +29,12 @@ export interface lastTouch {
   y: number;
 }
 
+export interface previousTouch {
+  byPlayer: PlayerAugmented;
+  x: number;
+  y: number;
+}
+
 export class PlayerAugmented {
   id: number;
   name: string;
@@ -80,6 +86,7 @@ export class Game {
   animation: boolean;
   eventCounter: number;
   lastTouch: lastTouch | null;
+  previousTouch: previousTouch | null;
   lastKick: PlayerObject | null;
   ballRotation: { x: number; y: number; power: number };
   positionsDuringPass: PlayerObject[];
@@ -94,6 +101,7 @@ export class Game {
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
+    this.previousTouch = null;
     this.lastKick = null;
     this.animation = false;
     this.ballRotation = { x: 0, y: 0, power: 0 };
