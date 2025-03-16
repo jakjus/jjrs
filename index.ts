@@ -1,7 +1,7 @@
 import { Headless } from "haxball.js";
 import { duringDraft } from "./src/chooser";
 import { isCommand, handleCommand } from "./src/command";
-import { playerMessage } from "./src/message";
+import { playerMessage, sendMessage } from "./src/message";
 import {
   handleBallOutOfBounds,
   handleBallInPlay,
@@ -24,6 +24,12 @@ import * as crypto from "node:crypto";
 export const version = '1.1.3 (26/01/2024)'
 
 export interface lastTouch {
+  byPlayer: PlayerAugmented;
+  x: number;
+  y: number;
+}
+
+export interface previousTouch {
   byPlayer: PlayerAugmented;
   x: number;
   y: number;
@@ -80,6 +86,7 @@ export class Game {
   animation: boolean;
   eventCounter: number;
   lastTouch: lastTouch | null;
+  previousTouch: previousTouch | null;
   lastKick: PlayerObject | null;
   ballRotation: { x: number; y: number; power: number };
   positionsDuringPass: PlayerObject[];
@@ -94,6 +101,7 @@ export class Game {
     this.eventCounter = 0; // to debounce some events
     this.inPlay = true;
     this.lastTouch = null;
+    this.previousTouch = null;
     this.lastKick = null;
     this.animation = false;
     this.ballRotation = { x: 0, y: 0, power: 0 };
@@ -185,7 +193,17 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.startGame();
 
   let i = 0;
-  room.onTeamGoal = (team) => {};
+  
+  room.onTeamGoal = (team) => {
+    if (game?.lastTouch?.byPlayer.team === team) {
+      sendMessage(`Goal! Player ${game?.lastTouch?.byPlayer.name} scored! 🥅`);
+      if (game?.previousTouch?.byPlayer.id !== game?.lastTouch?.byPlayer.id && game?.previousTouch?.byPlayer.team === game?.lastTouch?.byPlayer.team) {
+        sendMessage(`Assist by ${game?.previousTouch?.byPlayer.name}! 🎯`);
+      }
+    } else {
+      sendMessage(`Own goal by ${game?.lastTouch?.byPlayer.name}! 😱`);
+    }
+  };
 
   room.onGameTick = () => {
     if (!game) {
