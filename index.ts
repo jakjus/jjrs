@@ -1,7 +1,7 @@
 import { Headless } from "haxball.js";
 import { duringDraft } from "./src/chooser";
 import { isCommand, handleCommand } from "./src/command";
-import { playerMessage } from "./src/message";
+import { playerMessage, sendMessage } from "./src/message";
 import {
   handleBallOutOfBounds,
   handleBallInPlay,
