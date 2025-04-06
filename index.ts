@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.2.0 (17/03/2025)'
+export const version = '1.2.1 (06/04/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
