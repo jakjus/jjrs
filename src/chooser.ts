@@ -111,12 +111,17 @@ const initChooser = (room: RoomObject) => {
 
   const _onPlayerJoin = room.onPlayerJoin;
   room.onPlayerJoin = (p) => {
+    if (!p.auth) {
+      room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
+      return
+    }
     _onPlayerJoin(p);
     addToGame(room, p);
   };
 
   const _onPlayerLeave = room.onPlayerLeave;
   room.onPlayerLeave = async (p) => {
+    if (!p.auth) { return }
     await handlePlayerLeaveOrAFK(toAug(p));
     _onPlayerLeave(p);
   };

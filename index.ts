@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.2.1 (06/04/2025)'
+export const version = '1.3.1 (07/04/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -240,13 +240,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   };
 
   room.onPlayerJoin = async (p) => {
+    console.log(p)
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true);
     } else {
-      if (!p.auth) {
-        room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
-        return
-      }
       if (players.map((p) => p.auth).includes(p.auth)) {
         room.kickPlayer(p.id, "You are already on the server.", false);
         return
