@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.1.3 (26/01/2024)'
+export const version = '1.2.1 (06/04/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -33,6 +33,13 @@ export interface previousTouch {
   byPlayer: PlayerAugmented;
   x: number;
   y: number;
+}
+export interface holdPlayer {
+  // used to save player data in memory for each game to handle him
+  // returning to game and stats
+  id: number;
+  auth: string;
+  team: TeamID;
 }
 
 export class PlayerAugmented {
@@ -46,7 +53,6 @@ export class PlayerAugmented {
   activation: number;
   team: 0 | 1 | 2;
   slowdown: number;
-  gameId: number;
   slowdownUntil: number;
   cooldownUntil: number;
   fouledAt: { x: number; y: number };
@@ -56,7 +62,6 @@ export class PlayerAugmented {
   elo: number;
   constructor(p: PlayerObject & Partial<PlayerAugmented>) {
     this.id = p.id;
-    this.gameId = gameId;
     this.name = p.name;
     this.auth = p.auth;
     this.conn = p.conn;
@@ -91,7 +96,7 @@ export class Game {
   ballRotation: { x: number; y: number; power: number };
   positionsDuringPass: PlayerObject[];
   skipOffsideCheck: boolean;
-  currentPlayers: PlayerAugmented[];
+  holdPlayers: holdPlayer[];
   rotateNextKick: boolean;
   boostCount: number;
 
@@ -107,7 +112,7 @@ export class Game {
     this.ballRotation = { x: 0, y: 0, power: 0 };
     this.positionsDuringPass = [];
     this.skipOffsideCheck = false;
-    this.currentPlayers = JSON.parse(JSON.stringify(players)); // used to keep track on leavers in case they reconnect with red card or injury
+    this.holdPlayers = JSON.parse(JSON.stringify(players.map(p => { return { id: p.id, auth: p.auth, team: p.team }})))
     this.rotateNextKick = false;
     this.boostCount = 0;
   }
@@ -238,8 +243,13 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true);
     } else {
+      if (!p.auth) {
+        room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
+        return
+      }
       if (players.map((p) => p.auth).includes(p.auth)) {
         room.kickPlayer(p.id, "You are already on the server.", false);
+        return
       }
     }
     welcomePlayer(room, p);
@@ -274,13 +284,7 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   };
 
   room.onGameStart = (_) => {
-    if (!duringDraft) {
-      game = new Game();
-    }
     players.forEach((p) => {
-      if (game) {
-        p.gameId = game.id;
-      }
       p.slowdownUntil = 0;
       p.foulsMeter = 0;
       p.cardsAnnounced = 0;
@@ -291,6 +295,9 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
       p.cooldownUntil = 0;
       p.canCallFoulUntil = 0;
     });
+    if (!duringDraft) {
+      game = new Game();
+    }
     clearThrowInBlocks();
     room.getPlayerList().forEach((p) => room.setPlayerAvatar(p.id, ""));
   };

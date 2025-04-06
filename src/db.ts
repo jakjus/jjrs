@@ -20,15 +20,6 @@ const createTables = async (db: any) => {
   }
 };
 
-export const changeEloOfPlayer = async (playerId: number, change: number) => {
-  const p = game?.currentPlayers.find((p) => p.id == playerId);
-  if (!p) {
-    console.log("Error finding players for ELO calculation with ID ", playerId);
-    return 1200;
-  }
-  await db.run(`UPDATE players SET elo=elo+? WHERE auth=?`, [change, p.auth]);
-};
-
 export const initDb = async () => {
   db = await Database.open("db.sqlite");
   // Uncomment for DB SQL Debug:
@@ -47,7 +38,7 @@ interface ReadPlayer {
 }
 
 export const getOrCreatePlayer = async (
-  p: PlayerObject | PlayerAugmented,
+  p: { auth: string, name: string },
 ): Promise<ReadPlayer> => {
   const auth = p.auth;
   const playerInDb = await db.get("SELECT elo FROM players WHERE auth=?", [

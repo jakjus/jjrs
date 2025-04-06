@@ -16,22 +16,24 @@ export const welcomePlayer = (room: RoomObject, p: PlayerObject) => {
 export const initPlayer = async (p: PlayerObject) => {
   let newPlayer = new PlayerAugmented(p);
   if (game) {
-    const found = game.currentPlayers.find((pp) => pp.auth == p.auth);
+    const found = game.holdPlayers.find((pp) => pp.auth == p.auth);
     // If player reconnected into the same game, apply cooldowns, cards and
     // injuries.
-    if (found && found.gameId == game.id) {
-      game.currentPlayers = game.currentPlayers.filter(
-        (ppp) => ppp.auth != p.auth,
-      );
+    if (found) {
+      // player was already in game
+      // disallow reconnect on the same game (giving red card)
       newPlayer = new PlayerAugmented({
         ...p,
-        foulsMeter: found.foulsMeter,
-        cardsAnnounced: found.foulsMeter, // if cards were not announced, make it announced immediately after reconnect
-        slowdown: found.slowdown,
-        slowdownUntil: found.slowdownUntil,
+        foulsMeter: 2,
+        cardsAnnounced: 2
       });
+      found.id = p.id  // so that the elo decrease is shown to him
+    } else {
+      // when he connects during the game, push in with team: 0 to not
+      // assign any points, but not let him back in on reconnect (in
+      // case he abuses red card + reconnect during warmup)
+      game.holdPlayers.push({ id: p.id, auth: p.auth, team: 0 })
     }
-    game.currentPlayers.push(newPlayer);
   }
   players.push(newPlayer);
   const readPlayer = await getOrCreatePlayer(p);

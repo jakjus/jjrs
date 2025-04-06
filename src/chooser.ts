@@ -1,4 +1,4 @@
-import { room, players, PlayerAugmented } from "..";
+import { room, players, PlayerAugmented, db } from "..";
 import * as fs from "fs";
 import { performDraft } from "./draft/draft";
 import { sendMessage } from "./message";
@@ -6,13 +6,12 @@ import { game, Game } from "..";
 import { sleep } from "./utils";
 import { toAug } from "..";
 import { teamSize } from "./settings";
-import { calculateChanges, execChanges } from "hax-standard-elo";
-import { changeEloOfPlayer, getOrCreatePlayer } from "./db";
+import { changeElo } from "./elo";
 
 /* This manages teams and players depending
  * on being during ranked game or draft phase. */
 
-const maxTeamSize = process.env.DEBUG ? 2 : teamSize;
+const maxTeamSize = process.env.DEBUG ? 1 : teamSize;
 let isRunning: boolean = false;
 let isRanked: boolean = false;
 export let duringDraft: boolean = false;
@@ -40,7 +39,7 @@ export const handlePlayerLeaveOrAFK = async (p: PlayerAugmented) => {
   if (!duringDraft && !isRanked) {
     balanceTeams();
   }
-  if (isRanked) {
+  if (isRanked && !process.env.DEBUG) {
     if ([...red(), ...blue()].length <= 2) {
       isRanked = false;
       sendMessage("Only 2 players left. Cancelling ranked game.");
@@ -48,28 +47,13 @@ export const handlePlayerLeaveOrAFK = async (p: PlayerAugmented) => {
   }
 };
 
-const handleWin = async (game: Game) => {
-  const getEloOfPlayer = async (playerId: number) => {
-    const p = game.currentPlayers.find((p) => p.id == playerId);
-    if (!p) {
-      console.log(
-        "Error finding players for ELO calculation with ID ",
-        playerId,
-      );
-      return 1200;
-    }
-    const res = await getOrCreatePlayer(p);
-    return res.elo;
-  };
+const handleWin = async (game: Game, winnerTeamId: TeamID) => {
 
   try {
-    const changes = await calculateChanges(
-      room,
-      getEloOfPlayer,
-      game.currentPlayers,
-    );
+    const changes = await changeElo(game, winnerTeamId)
+
     changes.forEach((co) => {
-      const p = room.getPlayer(co.playerId);
+      const p = room.getPlayer(co.id);
       if (p) {
         sendMessage(
           `Your ELO: ${toAug(p).elo} → ${toAug(p).elo + co.change} (${co.change > 0 ? "+" : ""}${co.change})`,
@@ -78,10 +62,9 @@ const handleWin = async (game: Game) => {
       }
     });
 
-    await execChanges(changes, getEloOfPlayer, changeEloOfPlayer);
     changes.forEach((co) => {
-      if (players.map((p) => p.id).includes(co.playerId)) {
-        const pp = room.getPlayer(co.playerId);
+      if (players.map((p) => p.id).includes(co.id)) {
+        const pp = room.getPlayer(co.id);
         if (pp) {
           toAug(pp).elo += co.change;
         } // change elo on server just for showing in chat. when running two instances of the server, this may be not accurate, although it is always accurate in DB (because the changes and calculations are always based on DB data, not on in game elo. false elo will be corrected on reconnect.)
@@ -185,14 +168,14 @@ const initChooser = (room: RoomObject) => {
     if (_onTeamVictory) {
       _onTeamVictory(scores);
     }
+    const winTeam = scores.red > scores.blue ? 1 : 2;
+    const loseTeam = scores.red > scores.blue ? 2 : 1;
     if (isRanked) {
       if (!game) {
         return;
       }
-      await handleWin(game);
+      await handleWin(game, winTeam);
     }
-    const winTeam = scores.red > scores.blue ? 1 : 2;
-    const loseTeam = scores.red > scores.blue ? 2 : 1;
     sendMessage("Break time: 10 seconds.");
     await sleep(10000);
     const winnerIds = room
