@@ -226,8 +226,13 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true);
     } else {
+      if (!p.auth) {
+        room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
+        return
+      }
       if (players.map((p) => p.auth).includes(p.auth)) {
         room.kickPlayer(p.id, "You are already on the server.", false);
+        return
       }
     }
     welcomePlayer(room, p);
