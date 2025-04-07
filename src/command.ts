@@ -90,7 +90,7 @@ const setAfk = (p: PlayerAugmented) => {
   p.afk = true;
   room.setPlayerTeam(p.id, 0);
   sendMessage("You are now AFK.", p);
-  handlePlayerLeaveOrAFK(p);
+  handlePlayerLeaveOrAFK();
 };
 
 const setBack = (p: PlayerAugmented) => {

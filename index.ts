@@ -1,5 +1,5 @@
 import { Headless } from "haxball.js";
-import { duringDraft } from "./src/chooser";
+import { addToGame, duringDraft, handlePlayerLeaveOrAFK } from "./src/chooser";
 import { isCommand, handleCommand } from "./src/command";
 import { playerMessage, sendMessage } from "./src/message";
 import {
@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.3.1 (07/04/2025)'
+export const version = '1.3.3 (07/04/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -240,7 +240,10 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   };
 
   room.onPlayerJoin = async (p) => {
-    console.log(p)
+    if (!p.auth) {
+      room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
+      return
+    }
     if (process.env.DEBUG) {
       room.setPlayerAdmin(p.id, true);
     } else {
@@ -252,10 +255,11 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
     welcomePlayer(room, p);
     room.setPlayerAvatar(p.id, "");
     await initPlayer(p);
+    addToGame(room, p);
   };
 
-  // handled in src/chooser.ts
   room.onPlayerLeave = async (p) => {
+    await handlePlayerLeaveOrAFK();
     players = players.filter((pp) => p.id != pp.id);
   };
 

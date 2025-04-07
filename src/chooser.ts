@@ -29,7 +29,7 @@ const balanceTeams = () => {
   }
 };
 
-export const handlePlayerLeaveOrAFK = async (p: PlayerAugmented) => {
+export const handlePlayerLeaveOrAFK = async () => {
   if (players.filter((p) => !p.afk).length < 1) {
     room.stopGame();
     await sleep(5000);
@@ -108,23 +108,6 @@ const initChooser = (room: RoomObject) => {
   };
 
   const isEnoughPlayers = () => ready().length >= maxTeamSize * 2;
-
-  const _onPlayerJoin = room.onPlayerJoin;
-  room.onPlayerJoin = (p) => {
-    if (!p.auth) {
-      room.kickPlayer(p.id, "Your auth key is invalid. Change at haxball.com/playerauth", false);
-      return
-    }
-    _onPlayerJoin(p);
-    addToGame(room, p);
-  };
-
-  const _onPlayerLeave = room.onPlayerLeave;
-  room.onPlayerLeave = async (p) => {
-    if (!p.auth) { return }
-    await handlePlayerLeaveOrAFK(toAug(p));
-    _onPlayerLeave(p);
-  };
 
   if (room.getScores()) {
     isRunning = true;
