@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.3.3 (07/04/2025)'
+export const version = '1.3.4 (19/04/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -259,8 +259,8 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   };
 
   room.onPlayerLeave = async (p) => {
-    await handlePlayerLeaveOrAFK();
     players = players.filter((pp) => p.id != pp.id);
+    await handlePlayerLeaveOrAFK();
   };
 
   room.onPlayerChat = (p, msg) => {

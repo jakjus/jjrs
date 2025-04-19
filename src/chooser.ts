@@ -30,9 +30,8 @@ const balanceTeams = () => {
 };
 
 export const handlePlayerLeaveOrAFK = async () => {
-  if (players.filter((p) => !p.afk).length < 1) {
+  if (players.filter((p) => !p.afk).length < 2) {
     room.stopGame();
-    await sleep(5000);
     room.startGame();
   }
   await sleep(100);
