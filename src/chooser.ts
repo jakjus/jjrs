@@ -30,8 +30,9 @@ const balanceTeams = () => {
 };
 
 export const handlePlayerLeaveOrAFK = async () => {
-  if (players.filter((p) => !p.afk).length < 2) {
+  if (players.filter((p) => !p.afk).length < 1) {
     room.stopGame();
+    sleep(5000); // this is important to cancel all ongoing animations when match stops
     room.startGame();
   }
   await sleep(100);
