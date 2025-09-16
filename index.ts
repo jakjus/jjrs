@@ -21,7 +21,7 @@ import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
 
-export const version = '1.3.5 (25/04/2025)'
+export const version = '1.3.6 (16/09/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -171,7 +171,8 @@ export let players: PlayerAugmented[] = [];
 export let toAug = (p: PlayerObject) => {
   const found = players.find((pp) => pp.id == p.id);
   if (!found) {
-    throw `Lookup for player with id ${p.id} failed. Player is not in the players array: ${JSON.stringify(players)}`;
+    console.error(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${JSON.stringify(players)}`);
+    return
   }
   return found;
 };

@@ -78,6 +78,9 @@ export const checkAllX = (game: Game) => {
         room.setPlayerAvatar(pp.id, "💨");
         setTimeout(() => room.setPlayerAvatar(pp.id, ""), 700);
         pp.cooldownUntil = new Date().getTime() + 18000;
+        if (process.env.DEBUG) {
+          pp.cooldownUntil = new Date().getTime() + 3000;
+        }
       } else {
         pp.activation = 0;
       }
@@ -128,12 +131,15 @@ const slide = async (game: Game, p: PlayerAugmented) => {
     ygravity: -props.yspeed * 0.026,
   });
   room.setPlayerAvatar(p.id, "👟");
+  p.cooldownUntil = new Date().getTime() + 23000;
+  if (process.env.DEBUG) {
+    p.cooldownUntil = new Date().getTime() + 3000;
+  }
   p.sliding = true;
   await sleep(900);
   p.sliding = false;
   p.slowdown = 0.13;
   p.slowdownUntil = new Date().getTime() + 1000 * 3;
-  p.cooldownUntil = new Date().getTime() + 23000;
   room.setPlayerAvatar(p.id, "");
 };
 

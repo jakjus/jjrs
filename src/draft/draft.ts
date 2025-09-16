@@ -69,6 +69,7 @@ export const performDraft = async (
 
   const setLock = (p: PlayerObject) => {
     const props = room.getPlayerDiscProperties(p.id);
+    if (!props) { return }
     room.setPlayerDiscProperties(p.id, {
       cGroup:
         room.CollisionFlags.red |
