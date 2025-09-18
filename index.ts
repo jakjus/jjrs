@@ -171,8 +171,7 @@ export let players: PlayerAugmented[] = [];
 export let toAug = (p: PlayerObject) => {
   const found = players.find((pp) => pp.id == p.id);
   if (!found) {
-    console.error(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${JSON.stringify(players)}`);
-    return
+    throw(`Lookup for player with id ${p.id} failed. Player is not in the players array: ${JSON.stringify(players)}`);
   }
   return found;
 };
