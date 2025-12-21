@@ -1,4 +1,4 @@
-import { Headless } from "haxball.js";
+import HaxballJS from "haxball.js";
 import { addToGame, duringDraft, handlePlayerLeaveOrAFK } from "./src/chooser";
 import { isCommand, handleCommand } from "./src/command";
 import { playerMessage, sendMessage } from "./src/message";
@@ -20,8 +20,9 @@ import { applyRotation } from "./src/rotateBall";
 import { afk } from "./src/afk";
 import { initPlayer } from "./src/welcome";
 import * as crypto from "node:crypto";
+import config from "./config";
 
-export const version = '1.3.6 (16/09/2025)'
+export const version = '1.3.7 (21/12/2025)'
 
 export interface lastTouch {
   byPlayer: PlayerAugmented;
@@ -180,7 +181,9 @@ export let game: Game | null;
 export let db: any;
 export let adminPass: string = crypto.randomBytes(6).toString("hex");
 
-const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
+const roomBuilder = async () => {
+  const HBInit = await HaxballJS()
+  const args: RoomConfigObject = { ...config, noPlayer: true }
   room = HBInit(args);
   db = await initDb();
   const rsStadium = fs.readFileSync("./maps/rs5.hbs", {
@@ -261,6 +264,13 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   room.onPlayerLeave = async (p) => {
     players = players.filter((pp) => p.id != pp.id);
     await handlePlayerLeaveOrAFK();
+    if (players.filter((p) => !p.afk).length < 1) {
+      if (game) {
+        game.eventCounter += 1
+      }
+      room.stopGame();
+      room.startGame();
+    }
   };
 
   room.onPlayerChat = (p, msg) => {
@@ -351,4 +361,4 @@ const roomBuilder = async (HBInit: Headless, args: RoomConfigObject) => {
   initChooser(room); // must be called at the end
 };
 
-export default roomBuilder;
+roomBuilder()
